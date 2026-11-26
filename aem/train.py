@@ -32,6 +32,8 @@ class TrainConfig:
     K: int = 100
     n_isir: int = 1
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
+    anchor_warmup: int = 0  # outer iterations with plain (unanchored) SNIS targets before anchoring
+    anchor_ramp: int = 0  # then linearly ramp the anchor-use probability from 0 to 1 over this many iterations
     out_clip: Optional[float] = None  # cap on ||sigma*s|| for targets and sampling; None: 10*sqrt(d); 0: off
     sigma_min: Optional[float] = None  # None: default for the target
     sigma_max: Optional[float] = None
@@ -52,7 +54,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -117,8 +119,25 @@ def train(cfg=None, **overrides):
                 sig = smin * torch.exp(t * log_ratio)
                 eps = torch.randn(B, d, generator=gen, dtype=x0.dtype)
                 x_t = x0 + sig[:, None] * eps
-                tgt = score_estimate(x_t, sig, target, cfg.K, anchor=x0 if anchored else None,
-                                     kind=cfg.kind, n_isir=cfg.n_isir, clip=clip, generator=gen)
+                p_anchor = 0.0
+                if anchored:
+                    p_anchor = 1.0 if cfg.anchor_ramp == 0 else (it - cfg.anchor_warmup) / cfg.anchor_ramp
+                    p_anchor = float(min(1.0, max(0.0, p_anchor))) if it > cfg.anchor_warmup else 0.0
+                if p_anchor >= 1.0:
+                    tgt = score_estimate(x_t, sig, target, cfg.K, anchor=x0, kind=cfg.kind, n_isir=cfg.n_isir,
+                                         clip=clip, generator=gen)
+                elif p_anchor <= 0.0:
+                    tgt = score_estimate(x_t, sig, target, cfg.K, anchor=None, kind=cfg.kind, clip=clip,
+                                         generator=gen)
+                else:  # per-sample anchor use with probability p_anchor
+                    use = torch.rand(B, generator=gen) < p_anchor
+                    tgt = torch.empty_like(x_t)
+                    if use.any():
+                        tgt[use] = score_estimate(x_t[use], sig[use], target, cfg.K, anchor=x0[use], kind=cfg.kind,
+                                                  n_isir=cfg.n_isir, clip=clip, generator=gen)
+                    if (~use).any():
+                        tgt[~use] = score_estimate(x_t[~use], sig[~use], target, cfg.K, anchor=None, kind=cfg.kind,
+                                                   clip=clip, generator=gen)
                 if oc is not None:  # cap ||sigma * target|| (same rule for every method)
                     nrm = sig[:, None] * tgt.norm(dim=-1, keepdim=True)
                     tgt = tgt * torch.clamp(oc / nrm.clamp_min(1e-30), max=1.0)
@@ -129,7 +148,7 @@ def train(cfg=None, **overrides):
                 torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
                 opt.step()
                 losses.append(loss.item())
-                n_evals += B * (cfg.K + int(anchored)) * cfg.n_isir
+                n_evals += B * (cfg.K + p_anchor) * (cfg.n_isir if p_anchor > 0 else 1)
 
             new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
             buf = torch.cat([buf, new])[-cfg.buffer_size:]
