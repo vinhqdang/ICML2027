@@ -6,7 +6,7 @@ We compare iDEM, AEM from scratch (\emph{cold}), explore$\to$anchor AEM (iDEM fo
 \Cref{cor:fixed} predicts that iDEM converges to the biased field $b_K$. On MW-32 this bias has a clear signature: the Gaussian coordinates of iDEM samples have variance $4.1\pm0.4$ instead of $1$, and the energy histogram is shifted ($\mathcal{E}$-$\mathcal{W}_1=44.5$). Every AEM variant brings the variance ratio to $1.04$--$1.05$ and lowers $\mathcal{E}$-$\mathcal{W}_1$ by $4$--$29\times$, with a better $\mathcal{W}_2$, at a 1\% higher energy budget.
 On GMM-10 ($d=16$) the effect is the same but smaller: the within-mode variance ratio is $1.17$ for iDEM and $1.05$--$1.08$ for AEM, and $\mathcal{E}$-$\mathcal{W}_1$ falls from $1.28$ to $0.26$--$0.57$.
 \Cref{fig:marginals} shows the effect directly: iDEM's Gaussian marginals are about twice too wide, its double-well marginals put mass between the wells, and its energy histogram is shifted by about $40$ units. The anchored model matches all three.
-These are the quantities governed by the within-mode posterior, where the anchor is informative and \cref{thm:unbiased} applies with $\epsilon_K$ close to one.
+These are the quantities governed by the within-mode posterior, where the anchor is informative and the Doeblin constant $\epsilon_K$ of \cref{thm:contraction} is close to one.
 \input{sec_exp_gmm40_text}
 
 \begin{figure*}[t]

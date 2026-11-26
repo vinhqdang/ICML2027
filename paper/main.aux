@@ -66,15 +66,17 @@
 \newlabel{sec:conclusion@cref}{{[section][5][]5}{[1][5][]5}}
 \bibdata{refs}
 \bibcite{akhound2024iterated}{{1}{2024}{{Akhound-Sadegh et~al.}}{{Akhound-Sadegh, Rector-Brooks, Bose, Mittal, Lemos, Liu, Sendera, Ravanbakhsh, Gidel, Bengio, Malkin, and Tong}}}
+\newlabel{fig:estimator}{{1}{6}{\textbf {Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma _t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma _t$}{figure.caption.1}{}}
+\newlabel{fig:estimator@cref}{{[figure][1][]1}{[1][5][]6}}
+\newlabel{fig:curves}{{2}{6}{\textbf {Energy $\mathcal {W}_1$ during training} (mean and min--max over 3 seeds). The dotted line marks the switch from exploration to anchoring in the explore$\to $anchor runs. Before it, those runs coincide with iDEM}{figure.caption.2}{}}
+\newlabel{fig:curves@cref}{{[figure][2][]2}{[1][5][]6}}
+\newlabel{fig:marginals}{{3}{6}{\textbf {MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates, smears mass between the wells and shifts the energy distribution. AEM removes these distortions}{figure.caption.3}{}}
+\newlabel{fig:marginals@cref}{{[figure][3][]3}{[1][5][]6}}
 \bibcite{andrieu2010particle}{{2}{2010}{{Andrieu et~al.}}{{Andrieu, Doucet, and Holenstein}}}
 \bibcite{andrieu2018uniform}{{3}{2018}{{Andrieu et~al.}}{{Andrieu, Lee, and Vihola}}}
 \bibcite{berner2024optimal}{{4}{2024}{{Berner et~al.}}{{Berner, Richter, and Ullrich}}}
 \bibcite{debortoli2024target}{{5}{2024}{{De~Bortoli et~al.}}{{De~Bortoli, Hutchinson, Wirnsberger, and Doucet}}}
 \bibcite{ewfm2025}{{6}{2025}{{Dern et~al.}}{{Dern, Redl, Pfister, Kollovieh, L{\"u}dke, and G{\"u}nnemann}}}
-\newlabel{fig:estimator}{{1}{6}{\textbf {Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma _t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma _t$}{figure.caption.1}{}}
-\newlabel{fig:estimator@cref}{{[figure][1][]1}{[1][5][]6}}
-\newlabel{fig:curves}{{2}{6}{\textbf {Energy $\mathcal {W}_1$ during training} (mean and min--max over 3 seeds). The dotted line marks the switch from exploration to anchoring in the explore$\to $anchor runs. Before it, those runs coincide with iDEM}{figure.caption.2}{}}
-\newlabel{fig:curves@cref}{{[figure][2][]2}{[1][5][]6}}
 \bibcite{proximal2025}{{7}{2026}{{Guo et~al.}}{{Guo, Choi, Zhu, Tao, and Chen}}}
 \bibcite{havens2025adjoint}{{8}{2025}{{Havens et~al.}}{{Havens, Miller, Yan, Domingo-Enrich, Sriram, Wood, Levine, Hu, Amos, Karrer, Fu, Liu, and Chen}}}
 \bibcite{huang2024reverse}{{9}{2024}{{Huang et~al.}}{{Huang, Dong, Hao, Ma, and Zhang}}}
@@ -87,12 +89,12 @@
 \bibcite{phillips2024particle}{{16}{2024}{{Phillips et~al.}}{{Phillips, Dau, Hutchinson, De~Bortoli, Deligiannidis, and Doucet}}}
 \bibcite{richter2024improved}{{17}{2024}{{Richter \& Berner}}{{Richter and Berner}}}
 \bibcite{bridgelosses2025}{{18}{2025}{{Sanokowski et~al.}}{{Sanokowski, Gruber, Bartmann, Hochreiter, and Lehner}}}
+\newlabel{tab:main}{{1}{7}{\textbf {Sampler quality after 40 outer iterations} (mean $\pm $ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$)}{table.caption.4}{}}
+\newlabel{tab:main@cref}{{[table][1][]1}{[1][5][]7}}
 \bibcite{sendera2024improved}{{19}{2024}{{Sendera et~al.}}{{Sendera, Kim, Mittal, Lemos, Scimeca, Rector-Brooks, Adam, Bengio, and Malkin}}}
 \bibcite{song2021score}{{20}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
 \bibcite{tjelmeland2004using}{{21}{2004}{{Tjelmeland}}{{}}}
 \bibcite{vargas2023denoising}{{22}{2023}{{Vargas et~al.}}{{Vargas, Grathwohl, and Doucet}}}
-\newlabel{tab:main}{{1}{7}{\textbf {Sampler quality after 40 outer iterations} (mean $\pm $ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$)}{table.caption.3}{}}
-\newlabel{tab:main@cref}{{[table][1][]1}{[1][5][]7}}
 \bibcite{vargas2024transport}{{23}{2024}{{Vargas et~al.}}{{Vargas, Padhy, Blessing, and N{\"u}sken}}}
 \bibcite{vincent2011connection}{{24}{2011}{{Vincent}}{{}}}
 \bibcite{iwsm2025}{{25}{2025}{{Wang et~al.}}{{Wang, Zhang, Cui, Zhao, Guan, and Yu}}}
@@ -112,6 +114,6 @@
 \newlabel{app:exp@cref}{{[appendix][2][2147483647]B}{[1][10][]10}}
 \newlabel{app:extra}{{C}{10}{Impact Statement}{appendix.C}{}}
 \newlabel{app:extra@cref}{{[appendix][3][2147483647]C}{[1][10][]10}}
-\newlabel{tab:replay}{{2}{11}{Relative MSE (relative squared bias in parentheses) of the score target on GMM-10 ($d=16$) at high noise}{table.caption.6}{}}
+\newlabel{tab:replay}{{2}{11}{Relative MSE (relative squared bias in parentheses) of the score target on GMM-10 ($d=16$) at high noise}{table.caption.7}{}}
 \newlabel{tab:replay@cref}{{[table][2][2147483647]2}{[1][11][]11}}
 \gdef \@abspage@last{11}
