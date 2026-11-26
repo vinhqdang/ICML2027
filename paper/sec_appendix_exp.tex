@@ -1,0 +1,24 @@
+\section{Experimental details}
+\label{app:exp}
+
+\paragraph{Targets.}
+\emph{GMM-40} ($d=2$) is a mixture of 40 equal-weight isotropic unit-variance Gaussians whose means are drawn uniformly from $[-40,40]^2$~\citep{midgley2023flow}.
+\emph{GMM-10} ($d=16$) is a mixture of 10 equal-weight unit-variance Gaussians with means uniform in $[-10,10]^{16}$.
+\emph{MW-32} is the many-well energy $\mathcal{E}(x)=\sum_{i=1}^{16}\big(x_{2i-1}^4-6x_{2i-1}^2-0.5x_{2i-1}+0.5x_{2i}^2\big)$ with $2^{16}$ modes~\citep{midgley2023flow}. Each double-well coordinate puts about $84\%$ of its mass in the right-hand well.
+All three targets admit exact samples, and the Gaussian mixtures also admit closed-form noised scores and exact posterior draws. These are used for the estimator study. For MW-32 the noised score factorizes over coordinates and is computed by quadrature.
+
+\paragraph{Noise schedule and network.}
+We use the VE schedule $\sigma_t=\sigma_{\min}(\sigma_{\max}/\sigma_{\min})^t$ with $\sigma_{\min}=0.01$ and $\sigma_{\max}=70$ (GMM-40), $20$ (GMM-10) and $3$ (MW-32).
+The score network is an MLP with four hidden layers of width 256, SiLU activations and a sinusoidal time embedding. It is preconditioned so that the network predicts $\sigma_t\,s(x,t)$.
+For stability we cap the norm of $\sigma_t\times$(target) and of $\sigma_t\times$(sampler score) at $10\sqrt d$, and we clip per-particle energy gradients at norm $10^3$ (GMM-40). These rules are identical for all methods.
+
+\paragraph{Training protocol.}
+Every method uses the same outer/inner loop as iDEM: 40 outer iterations, each with 100 Adam steps (learning rate $5\cdot10^{-4}$, batch 256, gradient clipping at norm 1). Each outer iteration then adds 1000 reverse-SDE samples to a FIFO buffer of size $10^4$. The SDE uses 200 Euler--Maruyama steps for the GMMs and 300 for MW-32 during training, and 500/1000 steps for evaluation.
+All methods use $K=100$ proposals and the same test function, the precision-weighted combination $g=\alpha_t g_{\mathrm{TSI}}+(1-\alpha_t)g_{\mathrm{DSI}}$ with $\alpha_t=(1+\sigma_t^2)^{-1}$. In our initial GMM-40 runs with pure TSI targets (before the norm caps above were added), training diverged for both iDEM and AEM. \Cref{sec:exp-estimator} shows the cause: the TSI estimator's relative variance explodes at high noise. We therefore give iDEM the same stabilized target, which makes it a stronger baseline than the original.
+\emph{Explore$\to$anchor} runs share their first 20 outer iterations with iDEM (same seed, so identical trajectories) and anchor afterwards. AEM-R additionally uses replay proposals \eqref{eq:replay} with $\alpha=0.5$ and $\tau_{\max}=1$ (GMMs) or $0.5$ (MW-32) in the anchored phase.
+AEM evaluates $K+1$ energies per target instead of $K$, a 1\% overhead. AEM-R additionally computes a $B\times K\times B$ log-sum-exp.
+
+\paragraph{Metrics.}
+All metrics compare 2000 model samples with 2000 exact samples: exact $\mathcal{W}_2$ (Hungarian matching on 1000 points), $\mathcal{W}_1$ between energy histograms ($\mathcal{E}$-$\mathcal{W}_1$), MMD with a median-heuristic RBF kernel, and the total-variation distance between empirical and true mode occupancies (GMMs: nearest mean; MW-32: the 16 sign patterns of the first four double-well coordinates).
+The \emph{variance ratio} measures within-mode spread: $\frac{1}{d}\mathbb{E}\|x-\mu_{\mathrm{nearest}}\|^2$ for the GMMs (truth $1$), and the variance of the Gaussian coordinates for MW-32 (truth $1$).
+All experiments ran on 4 CPU cores.
