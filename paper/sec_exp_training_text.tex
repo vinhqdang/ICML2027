@@ -22,3 +22,7 @@ These quantities are governed by the within-mode posterior, where the anchor is 
 \caption{\textbf{MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates, smears mass between the wells and shifts the energy distribution. AEM removes these distortions.}
 \label{fig:marginals}
 \end{figure}
+
+\paragraph{Oracle buffer: testing the fixed point directly.}
+To rule out explanations such as short training, the stability caps or the sampler loop, we remove the loop entirely. We train on a \emph{fixed buffer of $10^4$ exact samples} from $\pi$ (\texttt{oracle} mode; rows drawn without replacement), so the buffer law is exactly $\pi$ and \cref{cor:fixed} applies verbatim. We then measure the relative error of the learned score against the exact noised score $\nabla\log p_t$ at $x_t=x_0+\sigma_t\varepsilon$, $x_0\sim\pi$ (\cref{tab:oracle}).
+\input{sec_exp_oracle_text}
