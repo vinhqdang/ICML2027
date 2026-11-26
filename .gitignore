@@ -226,5 +226,4 @@ results/smoke/
 *.pt
 results/main/**/model.pt
 results/main/**/stdout.txt
-results/main/
 results/oracle/**/model.pt
