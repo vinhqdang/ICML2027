@@ -1,0 +1,129 @@
+% ---------------------------------------------------------------
+\section{Anchored Energy Matching}
+\label{sec:method}
+% ---------------------------------------------------------------
+
+\paragraph{Setting.}
+Let $\pi(x)=\tilde\pi(x)/Z$ with $\tilde\pi(x)=\exp(-\mathcal{E}(x))$ on $\mathbb{R}^d$.
+We use the variance-exploding (VE) noising process $x_t = x_0 + \sigma_t\varepsilon$, $\varepsilon\sim\mathcal{N}(0,I)$, with marginals $p_t=\pi*\mathcal{N}(0,\sigma_t^2 I)$, and write
+$\pi_t(x_0\mid x_t)\propto \tilde\pi(x_0)\,\mathcal{N}(x_t;x_0,\sigma_t^2I)$ for the denoising posterior.
+For any test function $g$, define the posterior mean $\bar g_t(x_t)=\mathbb{E}_{\pi_t(\cdot\mid x_t)}[g(x_0)]$.
+Two choices of $g$ recover the noised score,
+\begin{align}
+\nabla\log p_t(x_t)
+&= \mathbb{E}_{\pi_t(\cdot\mid x_t)}\big[-\nabla\mathcal{E}(x_0)\big] && \text{(TSI)}\label{eq:tsi}\\
+&= \mathbb{E}_{\pi_t(\cdot\mid x_t)}\big[(x_0-x_t)/\sigma_t^2\big] && \text{(DSI)}.\label{eq:dsi}
+\end{align}
+The target score identity (TSI) needs energy gradients. The denoising score identity (DSI) needs only energies, but it is useless without posterior samples.
+
+\paragraph{Energy matching and its bias.}
+iDEM~\citep{akhound2024iterated} trains $s_\theta(x,t)$ by regressing onto a self-normalized importance sampling (SNIS) estimate of \eqref{eq:tsi}. It uses $K$ proposals $y_{1:K}\overset{\text{iid}}{\sim} q_t(\cdot\mid x_t)=\mathcal{N}(x_t,\sigma_t^2I)$ and importance weights $w(y)=\tilde\pi(y)\mathcal{N}(x_t;y,\sigma_t^2I)/q_t(y\mid x_t)=\tilde\pi(y)$:
+\begin{equation}
+\widehat S_K(x_t)=\frac{\sum_{k=1}^K w(y_k)\,g(y_k)}{\sum_{k=1}^K w(y_k)}.
+\label{eq:snis}
+\end{equation}
+The noised points come from a replay buffer $\mathcal{B}$ filled with the model's own samples: $x_0\sim\rho$ (the buffer law) and $x_t=x_0+\sigma_t\varepsilon$.
+The loss is $\mathcal{L}_\rho(\theta)=\mathbb{E}_{t,x_0,\varepsilon,y}\,\lambda_t\|s_\theta(x_t,t)-\widehat S_K(x_t)\|^2$.
+Its minimizer over all functions is the conditional mean $s^\star_\rho(x,t)=\mathbb{E}[\widehat S_K(x_t)\mid x_t=x]$.
+Because $\widehat S_K$ never looks at $x_0$, this minimizer is the \emph{same biased field} $b_K(x,t)=\mathbb{E}_{q_t}[\widehat S_K(x)]$ for \emph{every} buffer law $\rho$, including the target $\rho=\pi$.
+SNIS has bias of order $\mathrm{Var}_{q_t}(w)/(K\,\mathbb{E}_{q_t}[w]^2)$. This term grows exponentially as $\sigma_t$ grows, because the proposal spreads over the whole space while $\tilde\pi$ concentrates on its modes.
+So the true score is not a stationary point of iDEM training, and the error sits at high noise, which is where the sampler decides how much mass each mode gets.
+
+\paragraph{The anchor.}
+Each training pair already contains a candidate posterior sample: the clean point $x_0$ that generated $x_t$.
+If $x_0\sim\pi$, then $x_0\mid x_t\sim\pi_t(\cdot\mid x_t)$ \emph{exactly}.
+Anchored Energy Matching (AEM) adds $x_0$ to the particle system as the anchor $y_0:=x_0$:
+\begin{equation}
+\widehat A_K(x_t,x_0)=\frac{\sum_{k=0}^K w(y_k)\,g(y_k)}{\sum_{k=0}^K w(y_k)},\qquad y_0=x_0.
+\label{eq:aem}
+\end{equation}
+This costs one extra energy (and gradient) evaluation per training pair, often a cached one.
+The construction is the Rao--Blackwellized form of one step of the iterated sampling--importance resampling (i-SIR) kernel, i.e.\ conditional SMC with one time step~\citep{andrieu2010particle,andrieu2018uniform}.
+Here we use it to build an unbiased \emph{regression target}, not to run a Markov chain.
+
+% ---------------------------------------------------------------
+\subsection{Theory}
+\label{sec:theory}
+% ---------------------------------------------------------------
+Fix $t$ and $x_t$. Write $\pi_t=\pi_t(\cdot\mid x_t)$, $q=q_t(\cdot\mid x_t)$, and let $\bar w(y)=\pi_t(y)/q(y)$ be the normalized weight.
+Assume $M_t(x_t):=\sup_y \bar w(y)<\infty$. This holds for the Gaussian proposal whenever $\tilde\pi$ is bounded.
+
+\begin{theorem}[Exact unbiasedness and Rao--Blackwell variance bound]
+\label{thm:unbiased}
+Let $y_0\sim\pi_t$ and $y_{1:K}\overset{\text{iid}}{\sim}q$ be independent. For every $K\ge 0$ and every $g\in L^2(\pi_t)$,
+\[
+\mathbb{E}\big[\widehat A_K\big]=\bar g_t(x_t)
+\quad\text{and}\quad
+\mathrm{Cov}\big[\widehat A_K\big]\preceq \mathrm{Cov}_{\pi_t}\big[g\big].
+\]
+\end{theorem}
+\begin{proof}[Proof sketch]
+Pick an index $J$ uniformly from $\{0,\dots,K\}$ and swap the labels of $y_0$ and $y_J$.
+This does not change the law of $\widehat A_K$, because the estimator is symmetric in its particles.
+The relabelled system has joint law $\frac{1}{K+1}\pi_t(y_J)\prod_{k\neq J}q(y_k)$.
+Summing over $J$ gives the marginal $\prod_k q(y_k)\cdot\frac{1}{K+1}\sum_j\bar w(y_j)$.
+So the conditional law of $J$ given the particles is $\bar w(y_J)/\sum_j \bar w(y_j)$, while $y_J\sim\pi_t$ marginally.
+Hence $\widehat A_K=\mathbb{E}[g(y_J)\mid y_{0:K}]$, and the tower rule gives $\mathbb{E}\widehat A_K=\mathbb{E}_{\pi_t}g$.
+The covariance bound is the law of total covariance (Rao--Blackwell). Full proof in \cref{app:proofs}.
+\end{proof}
+
+Two consequences follow. First, $K=0$ recovers target score matching ($g=-\nabla\mathcal{E}$) or plain denoising score matching ($g$ from DSI); as $K\to\infty$ the anchor weight goes to zero and AEM tends to iDEM. AEM therefore interpolates between data-driven and energy-driven score learning, and every member of the family is unbiased.
+Second, the DSI choice of $g$ becomes viable. Its variance $\mathrm{tr}\,\mathrm{Cov}_{\pi_t}[x_0]/\sigma_t^4$ decays as $\sigma_t$ grows, whereas the TSI variance $\mathrm{tr}\,\mathrm{Cov}_{\pi_t}[\nabla\mathcal{E}]$ does not, which explains the large gains at high noise in \cref{sec:exp-estimator}.
+
+\begin{corollary}[The target is a fixed point]
+\label{cor:fixed}
+Let $s^{\mathrm{A}}_\rho(x,t)=\mathbb{E}[\widehat A_K\mid x_t=x]$ be the population minimizer of the AEM loss with buffer law $\rho$.
+Then $s^{\mathrm{A}}_\pi=\nabla\log p_t$ for all $K\ge0$.
+In contrast, the iDEM minimizer is $b_K$ for every $\rho$, and $b_K\neq\nabla\log p_t$ in general (\cref{app:idem-bias} gives a closed-form Gaussian counterexample).
+\end{corollary}
+
+In practice the buffer is only approximately $\pi$. The next result shows that AEM \emph{shrinks} the buffer error instead of copying it.
+
+\begin{theorem}[Bias contraction under an approximate anchor]
+\label{thm:contraction}
+Let $y_0\sim\mu$ for an arbitrary distribution $\mu$ (e.g.\ $\mu=\rho_t(\cdot\mid x_t)$, the buffer posterior), with the other particles as before.
+Then $\mathbb{E}[\widehat A_K]=(\mu P_K)(g)$, where $P_K$ is the i-SIR Markov kernel, which leaves $\pi_t$ invariant. For bounded $g$,
+\[
+\big\|\mathbb{E}[\widehat A_K]-\bar g_t(x_t)\big\|
+\le 2\|g\|_\infty\,(1-\epsilon_K)\,\mathrm{TV}(\mu,\pi_t),
+\qquad
+\epsilon_K=\frac{K}{K-1+2M_t}.
+\]
+Running $n$ i-SIR steps before the final Rao--Blackwellized average (each step resamples a new anchor and redraws the proposals) replaces $(1-\epsilon_K)$ by $(1-\epsilon_K)^n$.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The first claim is the identity $\widehat A_K=\mathbb{E}[g(y_J)\mid y_{0:K}]$ with $J\sim\mathrm{Cat}(\bar w)$, which holds for any anchor law.
+For the minorization, any $y_0$ and measurable $B$ satisfy
+$P_K(y_0,B)\ge K\,\mathbb{E}\big[\bar w(y_1)\mathbf 1_B(y_1)/(\bar w(y_0)+\bar w(y_1)+\sum_{k\ge2}\bar w(y_k))\big]\ge \epsilon_K\,\pi_t(B)$,
+using $\bar w\le M_t$, the independence of $y_1$ from $y_{2:K}$, Jensen's inequality for $u\mapsto 1/(2M_t+u)$, and $\mathbb{E}_q\bar w=1$.
+A Doeblin minorization with constant $\epsilon_K$ contracts total variation by $(1-\epsilon_K)$ per step.
+\end{proof}
+
+\Cref{thm:contraction} formalizes a self-correcting loop. The regression target reflects the target $\pi$ more faithfully than the buffer that produced it, so each outer iteration can only reduce the dependence on buffer errors.
+It also gives graceful degradation. A poor anchor (low $\tilde\pi(x_0)$) gets negligible weight and AEM reduces to iDEM; a good anchor dominates exactly when the proposals miss every mode, which is the regime where iDEM's SNIS collapses onto whichever proposal happens to land closest to a mode.
+The minorization constant shows the limitation honestly: when $M_t$ is large (high noise, high dimension), contraction per step is weak. Then the target leans on the buffer, and exploration has to come from the intermediate noise levels, where the proposals do reach other modes. We study this trade-off empirically in \cref{sec:exp-ablation}.
+
+\paragraph{Variance-optimal combination.}
+Since every $g$ gives an unbiased target under the same particles and weights, any combination $\alpha_t g_{\mathrm{TSI}}+(1-\alpha_t)g_{\mathrm{DSI}}$ is also unbiased (\cref{thm:unbiased}).
+A precision-weighted schedule that trusts TSI at low noise and DSI at high noise keeps unbiasedness and removes most of the residual variance. Unlike the control-variate coefficient of \citet{cvsi2025}, it needs no per-batch estimation, which would reintroduce bias.
+
+\begin{algorithm}[t]
+\caption{Anchored Energy Matching (AEM)}
+\label{alg:aem}
+\begin{algorithmic}
+\STATE {\bfseries Input:} energy $\mathcal{E}$, network $s_\theta$, buffer $\mathcal{B}$, proposals $K$, i-SIR steps $n$
+\REPEAT
+\STATE \emph{Outer:} simulate the reverse SDE with $s_\theta$; push samples into $\mathcal{B}$
+\FOR{inner step $=1$ {\bfseries to} $N_{\mathrm{in}}$}
+\STATE $x_0\sim\mathcal{B}$, $t\sim\mathcal{U}[0,1]$, $x_t=x_0+\sigma_t\varepsilon$
+\STATE $y_0\gets x_0$ \hfill\COMMENT{anchor}
+\FOR{$i=1$ {\bfseries to} $n$}
+\STATE $y_{1:K}\sim\mathcal{N}(x_t,\sigma_t^2I)$; $\;\omega_k\propto \exp(-\mathcal{E}(y_k))$, $k=0..K$
+\STATE {\bfseries if} $i<n$: $y_0\gets y_J$, $J\sim\mathrm{Cat}(\omega)$
+\ENDFOR
+\STATE $\widehat A\gets\sum_{k=0}^K\omega_k\,g_t(y_k)$
+\STATE $\theta\gets\theta-\eta\nabla_\theta\,\lambda_t\|s_\theta(x_t,t)-\widehat A\|^2$
+\ENDFOR
+\UNTIL{budget exhausted}
+\end{algorithmic}
+\end{algorithm}

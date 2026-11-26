@@ -1,0 +1,50 @@
+\section{Proofs}
+\label{app:proofs}
+
+Throughout, $x_t$ and $t$ are fixed. We write $\pi_t$ for the posterior $\pi_t(\cdot\mid x_t)$, $q$ for the proposal, and $\bar w=\pi_t/q$ for the normalized importance weight, so that $\mathbb{E}_q[\bar w]=1$. The unnormalized weights $w=\tilde\pi\,\mathcal{N}(x_t;\cdot,\sigma_t^2I)/q$ used in \eqref{eq:aem} differ from $\bar w$ by a factor that does not depend on the particle, and that factor cancels after self-normalization. We may therefore use $\bar w$ throughout. Let $Y=(y_0,\dots,y_K)$ and $W_j=\bar w(y_j)/\sum_{k=0}^K\bar w(y_k)$.
+
+\subsection{Proof of \cref{thm:unbiased}}
+Define the extended distribution on $\{0,\dots,K\}\times(\mathbb{R}^d)^{K+1}$
+\[
+\Gamma(j,Y)=\frac{1}{K+1}\,\pi_t(y_j)\prod_{k\neq j}q(y_k).
+\]
+Under $\Gamma$, $J$ is uniform and, given $J=j$, the particle $y_j$ is a posterior draw and the others are independent proposals. By exchangeability, the law of the unordered particle set under $\Gamma$ is the same as the law of the AEM particle system, in which the posterior draw always sits at index $0$. Since $\widehat A_K$ is a symmetric function of the particles, its law is the same under both.
+Marginalizing $J$,
+\[
+\Gamma(Y)=\prod_{k=0}^K q(y_k)\cdot\frac{1}{K+1}\sum_{j=0}^K\bar w(y_j),
+\]
+so $\Gamma(J=j\mid Y)=W_j$. Therefore
+\[
+\mathbb{E}_\Gamma[g(y_J)\mid Y]=\sum_j W_j\,g(y_j)=\widehat A_K(Y),
+\]
+and by the tower property $\mathbb{E}[\widehat A_K]=\mathbb{E}_\Gamma[g(y_J)]=\mathbb{E}_{\pi_t}[g]$, because $y_J\sim\pi_t$ under $\Gamma$.
+For the covariance, the law of total covariance gives
+$\mathrm{Cov}_\Gamma[g(y_J)]=\mathrm{Cov}[\mathbb{E}(g(y_J)\mid Y)]+\mathbb{E}[\mathrm{Cov}(g(y_J)\mid Y)]\succeq\mathrm{Cov}[\widehat A_K]$, and $\mathrm{Cov}_\Gamma[g(y_J)]=\mathrm{Cov}_{\pi_t}[g]$.
+None of these steps uses the specific form of $q$. The result holds for any proposal whose support contains that of $\pi_t$, and for any $K\ge0$. \hfill$\square$
+
+\subsection{Proof of \cref{cor:fixed}}
+The AEM loss is $\mathbb{E}\,\lambda_t\|s(x_t,t)-\widehat A_K\|^2$. Over all measurable $s$, its minimizer is $s(x,t)=\mathbb{E}[\widehat A_K\mid x_t=x]$. When $x_0\sim\pi$, the conditional law of $x_0$ given $x_t$ is $\pi_t(\cdot\mid x_t)$, so \cref{thm:unbiased} applies with $g$ from TSI or DSI, and both identities \eqref{eq:tsi}--\eqref{eq:dsi} give $\nabla\log p_t(x)$. For iDEM, the target $\widehat S_K$ is a function of $(x_t,y_{1:K})$ alone, and $y_{1:K}\mid x_t\sim q^{\otimes K}$ whatever the buffer law. Hence the minimizer is $b_K(x,t)=\mathbb{E}_{q^{\otimes K}}[\widehat S_K(x)]$ for every $\rho$. \hfill$\square$
+
+\subsection{A closed-form iDEM counterexample}
+\label{app:idem-bias}
+Let $\pi=\mathcal{N}(0,I_d)$ and $g(y)=-\nabla\mathcal{E}(y)=-y$ (TSI). The true noised score is $-x_t/(1+\sigma_t^2)$. With $K=1$, SNIS returns $g(y_1)$ with $y_1\sim\mathcal{N}(x_t,\sigma_t^2I)$, so
+\[
+b_1(x_t)=-x_t,\qquad b_1(x_t)-\nabla\log p_t(x_t)=-\frac{\sigma_t^2}{1+\sigma_t^2}\,x_t .
+\]
+The relative bias goes to $1$ as $\sigma_t$ grows. In contrast, the anchored estimator with $K=1$ is $(\bar w(x_0)(-x_0)+\bar w(y_1)(-y_1))/(\bar w(x_0)+\bar w(y_1))$, and it is exactly unbiased by \cref{thm:unbiased}. For $K>1$, the SNIS bias has the classical expansion $b_K-\bar g=-\frac1K\mathbb{E}_q[\bar w^2(g-\bar g)]+O(K^{-2})$~\citep{owen2013monte}. The leading term is nonzero here, and for this Gaussian $\mathbb{E}_q[\bar w^2]$ grows like $(1+\sigma_t^2)^{d}/(1+2\sigma_t^2)^{d/2}$, so for fixed $K$ the bias grows rapidly with $\sigma_t$ and $d$. We verify this numerically in \cref{sec:exp-estimator}.
+
+\subsection{Proof of \cref{thm:contraction}}
+\emph{Identity.} Let $y_0\sim\mu$ and $y_{1:K}\overset{\text{iid}}{\sim}q$. Define $J\mid Y\sim\mathrm{Cat}(W)$. Then $\widehat A_K=\mathbb{E}[g(y_J)\mid Y]$, so $\mathbb{E}\widehat A_K=\mathbb{E}g(y_J)=(\mu P_K)(g)$, where $P_K(y_0,\cdot)$ is the law of $y_J$. This kernel is the i-SIR kernel. It leaves $\pi_t$ invariant: under $\Gamma$, starting from $y_0\sim\pi_t$, \cref{thm:unbiased} shows $y_J\sim\pi_t$.
+
+\emph{Minorization.} Fix $y_0$ and a measurable set $B$. Write $S=\sum_{k=2}^K\bar w(y_k)$. Dropping the anchor term and using symmetry in $y_{1:K}$,
+\[
+P_K(y_0,B)\;\ge\;K\,\mathbb{E}\!\left[\frac{\bar w(y_1)\mathbf 1_B(y_1)}{\bar w(y_0)+\bar w(y_1)+S}\right]
+\;\ge\;K\,\mathbb{E}\big[\bar w(y_1)\mathbf 1_B(y_1)\big]\;\mathbb{E}\!\left[\frac{1}{2M_t+S}\right],
+\]
+because $\bar w\le M_t$ and $y_1$ is independent of $S$. Now $\mathbb{E}_q[\bar w\mathbf 1_B]=\pi_t(B)$, and Jensen's inequality for the convex map $u\mapsto(2M_t+u)^{-1}$ with $\mathbb{E}S=K-1$ gives $\mathbb{E}[(2M_t+S)^{-1}]\ge(2M_t+K-1)^{-1}$. Hence $P_K(y_0,\cdot)\ge\epsilon_K\pi_t(\cdot)$ with $\epsilon_K=K/(K-1+2M_t)$.
+
+\emph{Contraction.} Write $P_K=\epsilon_K\Pi+(1-\epsilon_K)R$, where $\Pi(y,\cdot)=\pi_t$ and $R$ is a Markov kernel. Then $(\mu-\pi_t)P_K=(1-\epsilon_K)(\mu-\pi_t)R$, since $(\mu-\pi_t)\Pi=0$ and $\pi_tP_K=\pi_t$. For bounded $g$, this yields $|(\mu P_K-\pi_t)g|\le(1-\epsilon_K)\,2\,\mathrm{TV}(\mu,\pi_t)\|g\|_\infty$. Applied coordinatewise, the bound holds for vector-valued $g$ with $\|g\|_\infty=\sup_y\|g(y)\|_\infty$. Iterating $n$ times gives the factor $(1-\epsilon_K)^n$. \hfill$\square$
+
+\begin{remark}[Unbounded $g$]
+The TSI and DSI test functions are unbounded. The same argument goes through in a weighted norm $\|f\|_V=\sup|f|/V$ whenever $P_K$ satisfies a drift condition for $V$. We state the bounded case for clarity: the qualitative message (contraction factor $1-\epsilon_K$) is unchanged.
+\end{remark}
