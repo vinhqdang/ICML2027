@@ -85,7 +85,7 @@ def table(runs):
             lines.append(f'{METH_NAME[me]} & ' + ' & '.join(cells) + f' \\\\  % n={len(runs[(t, me)])}')
         lines.append('\\midrule')
     out = os.path.join(ROOT, 'paper', 'tab_main_body.tex')
-    open(out, 'w').write('\n'.join(lines[:-1]) + '\n')
+    open(out, 'w').write('\n'.join(lines[:-1] + ['\\bottomrule']) + '\n')
     print(open(out).read())
 
 
