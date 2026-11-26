@@ -1,0 +1,64 @@
+\documentclass{article}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\newcommand{\theHalgorithm}{\arabic{algorithm}}
+\usepackage{icml2026}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[capitalize,noabbrev]{cleveref}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\icmltitlerunning{Anchored Energy Matching}
+
+\begin{document}
+
+\twocolumn[
+  \icmltitle{Anchored Energy Matching: Unbiased Regression Targets\\for Diffusion Samplers of Boltzmann Densities}
+  \icmlsetsymbol{equal}{*}
+  \begin{icmlauthorlist}
+    \icmlauthor{Quang-Vinh Dang}{buv}
+  \end{icmlauthorlist}
+  \icmlaffiliation{buv}{British University Vietnam, Hung Yen, Vietnam}
+  \icmlcorrespondingauthor{Quang-Vinh Dang}{vinh.dq4@buv.edu.vn}
+  \icmlkeywords{Diffusion samplers, Boltzmann densities, importance sampling, conditional SMC, score matching}
+  \vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\input{sec_abstract}
+\input{sec_intro}
+\input{sec_theory}
+\input{sec_related}
+\input{sec_experiments}
+\input{sec_conclusion}
+
+\section*{Impact Statement}
+This paper presents work whose goal is to advance the field of machine learning, specifically sampling from unnormalized densities as used in Bayesian inference and molecular simulation. We do not foresee societal consequences that need to be highlighted here beyond those of the field in general.
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+\newpage
+\appendix
+\onecolumn
+\input{sec_appendix_proofs}
+\input{sec_appendix_exp}
+
+\end{document}
