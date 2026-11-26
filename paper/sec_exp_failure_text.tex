@@ -1,0 +1,10 @@
+The same table shows the price of anchoring, and it is the one \cref{thm:contraction} predicts.
+When no proposal can reach a mode (high noise, high dimension), $M_t$ is huge and the contraction factor $1-\epsilon_K$ is close to one. The target then follows the buffer: AEM keeps the modes and mode weights the buffer has, and it does not discover new ones.
+Started from scratch, AEM inherits whichever modes the first, essentially random, buffers found. On GMM-10 it covers $5$ of $10$ modes (mode TV $0.65$), against $8$ for iDEM (mode TV $0.21$), and its $\mathcal{W}_2$ and MMD are worse accordingly. On MW-32 it occupies the minor wells less evenly than iDEM.
+iDEM explores better precisely \emph{because} its target is biased. When SNIS collapses onto the proposal closest to a mode, the resulting field points every noised point towards its nearest low-energy region, which spreads mass across basins whatever the buffer contains.
+
+Exploring first and anchoring afterwards recovers most of iDEM's coverage. On GMM-10 the explore$\to$anchor run keeps all 8 modes iDEM found and still halves $\mathcal{E}$-$\mathcal{W}_1$. It does not recover iDEM's mode-weight accuracy (mode TV $0.35$ vs.\ $0.21$).
+Replay proposals were designed to correct mode weights through the energy (\cref{sec:replay}). In our runs they gave the best variance ratio and $\mathcal{W}_2$ on MW-32, but they did not close the mode-weight gap. Used \emph{without} an anchor from the start, they collapse onto the buffer's modes even faster (2 of 10 modes on GMM-10 after 10 iterations; \cref{app:extra}).
+
+The overall picture is consistent. Anchoring makes the target unbiased exactly where the anchor is informative, and it corrects iDEM's systematic within-mode distortion. Mode discovery is a separate problem, and the bias that hurts iDEM's within-mode accuracy is what helps its exploration.
+A sampler that wants both needs an exploration mechanism that does not rely on biased targets, such as tempering or annealing across noise levels. Anchoring can be combined with such mechanisms.
