@@ -15,6 +15,7 @@ import numpy as np
 import torch
 
 from .estimators import score_estimate
+from .replay import score_estimate_replay
 from .metrics import compute_all
 from .model import ScoreNet
 from .sampler import sample_model
@@ -32,6 +33,9 @@ class TrainConfig:
     K: int = 100
     n_isir: int = 1
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
+    replay: int = 0  # 1: add replay (buffer-KDE) proposals, leave-one-out over the minibatch
+    alpha: float = 0.5  # probability of a Gaussian (iDEM) proposal in the replay mixture
+    tau_max: float = 1.0  # max KDE bandwidth; tau = min(sigma, tau_max)
     anchor_warmup: int = 0  # outer iterations with plain (unanchored) SNIS targets before anchoring
     anchor_ramp: int = 0  # then linearly ramp the anchor-use probability from 0 to 1 over this many iterations
     out_clip: Optional[float] = None  # cap on ||sigma*s|| for targets and sampling; None: 10*sqrt(d); 0: off
@@ -54,7 +58,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -123,7 +127,16 @@ def train(cfg=None, **overrides):
                 if anchored:
                     p_anchor = 1.0 if cfg.anchor_ramp == 0 else (it - cfg.anchor_warmup) / cfg.anchor_ramp
                     p_anchor = float(min(1.0, max(0.0, p_anchor))) if it > cfg.anchor_warmup else 0.0
-                if p_anchor >= 1.0:
+                if cfg.replay:
+                    if p_anchor >= 1.0:
+                        anc = x0
+                    elif p_anchor <= 0.0:
+                        anc = None
+                    else:
+                        anc = None if float(torch.rand(1, generator=gen)) > p_anchor else x0
+                    tgt = score_estimate_replay(x_t, sig, target, cfg.K, ref=x0, anchor=anc, kind=cfg.kind,
+                                                alpha=cfg.alpha, tau_max=cfg.tau_max, clip=clip, generator=gen)
+                elif p_anchor >= 1.0:
                     tgt = score_estimate(x_t, sig, target, cfg.K, anchor=x0, kind=cfg.kind, n_isir=cfg.n_isir,
                                          clip=clip, generator=gen)
                 elif p_anchor <= 0.0:
