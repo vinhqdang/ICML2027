@@ -34,7 +34,7 @@ def _estimate_block(target, x_t, sig, anchor, K, kind, n_isir, clip, generator, 
         props = x_t[:, None, :] + sig[:, :, None] * eps
         parts = props if cur_anchor is None else torch.cat([cur_anchor[:, None, :], props], dim=1)
 
-        E, neg_grad = _energy(target, parts, need_grad=last and kind in ('tsi', 'mix'))
+        E, neg_grad = _energy(target, parts, need_grad=last and kind in ('tsi', 'mix', 'avg'))
         logw = torch.where(torch.isfinite(-E), -E, torch.full_like(E, -float('inf')))
         w = torch.nan_to_num(torch.softmax(logw, dim=1), nan=0.0)
         dead = w.sum(1) <= 0
@@ -47,20 +47,23 @@ def _estimate_block(target, x_t, sig, anchor, K, kind, n_isir, clip, generator, 
             continue
 
         est_tsi = est_dsi = None
-        if kind in ('tsi', 'mix'):
+        if kind in ('tsi', 'mix', 'avg'):
             g = neg_grad
             if clip is not None:
                 nrm = g.norm(dim=-1, keepdim=True)
                 g = g * torch.clamp(clip / nrm.clamp_min(1e-30), max=1.0)
             est_tsi = (w[..., None] * g).sum(1)
-        if kind in ('dsi', 'mix'):
+        if kind in ('dsi', 'mix', 'avg'):
             est_dsi = (w[..., None] * (parts - x_t[:, None, :])).sum(1) / sig**2
         if kind == 'tsi':
             est = est_tsi
         elif kind == 'dsi':
             est = est_dsi
-        else:
+        elif kind == 'avg':
             est = 0.5 * (est_tsi + est_dsi)
+        else:  # 'mix': precision-motivated schedule, TSI at low noise and DSI at high noise
+            alpha = 1.0 / (1.0 + sig**2)
+            est = alpha * est_tsi + (1.0 - alpha) * est_dsi
 
     if not return_diag:
         return est, None
@@ -89,7 +92,7 @@ def score_estimate(x_t, sigma, target, K, anchor=None, kind='tsi', n_isir=1, cli
     Returns:
         est [B, d] (detached), and the diagnostics dict if return_diag.
     """
-    if kind not in ('tsi', 'dsi', 'mix'):
+    if kind not in ('tsi', 'dsi', 'mix', 'avg'):
         raise ValueError(f'unknown kind {kind!r}')
     if K < 0 or (K == 0 and anchor is None):
         raise ValueError('K = 0 requires an anchor')

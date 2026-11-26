@@ -88,7 +88,7 @@ def train(cfg=None, **overrides):
     target = get_target(cfg.target, **({} if cfg.dim is None else {'dim': cfg.dim}))
     d = target.dim
 
-    net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb)
+    net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb, sigma_min=smin, sigma_max=smax)
     opt = torch.optim.Adam(net.parameters(), lr=cfg.lr)
     ref = target.sample(cfg.n_eval, seed=REF_SEED).numpy()
 
@@ -116,7 +116,7 @@ def train(cfg=None, **overrides):
                 x_t = x0 + sig[:, None] * eps
                 tgt = score_estimate(x_t, sig, target, cfg.K, anchor=x0 if anchored else None,
                                      kind=cfg.kind, n_isir=cfg.n_isir, clip=clip, generator=gen)
-                s = net(x_t, t)
+                s = net.score(x_t, t)
                 loss = ((sig[:, None] ** 2) * (s - tgt) ** 2).sum(1).mean() / d
                 opt.zero_grad()
                 loss.backward()

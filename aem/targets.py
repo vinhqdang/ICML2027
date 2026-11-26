@@ -71,16 +71,20 @@ class GMM:
         self.std = float(std)
         self.n_comp, self.dim = self.means.shape
 
-    def energy(self, x):
+    def _sq_dist(self, x):
+        """Squared distances [N, M] via |x|^2 - 2 x.mu + |mu|^2 (one matmul, no [N, M, d] tensor)."""
         mu = self.means.to(x.dtype)
-        d2 = ((x[:, None, :] - mu) ** 2).sum(-1)
+        d2 = (x**2).sum(-1, keepdim=True) - 2.0 * x @ mu.T + (mu**2).sum(-1)[None, :]
+        return d2.clamp_min(0.0)
+
+    def energy(self, x):
+        d2 = self._sq_dist(x)
         log_comp = -0.5 * d2 / self.std**2 - 0.5 * self.dim * math.log(2 * math.pi * self.std**2)
         return -(torch.logsumexp(log_comp, -1) - math.log(self.n_comp))
 
     def mode_assign(self, x):
         """Index of the nearest component mean, [N]."""
-        mu = self.means.to(x.dtype)
-        return ((x[:, None, :] - mu) ** 2).sum(-1).argmin(-1)
+        return self._sq_dist(x).argmin(-1)
 
     def sample(self, n, seed=0, generator=None):
         g = _gen(seed, generator)
@@ -93,7 +97,7 @@ class GMM:
         x_t = x_t.to(torch.float64)
         sig = as_col(sigma, x_t.shape[0]).to(torch.float64)
         v = self.std**2 + sig**2
-        d2 = ((x_t[:, None, :] - self.means) ** 2).sum(-1)
+        d2 = self._sq_dist(x_t)
         r = torch.softmax(-0.5 * d2 / v, -1)
         return (r @ self.means - x_t) / v
 
@@ -104,7 +108,7 @@ class GMM:
         g = _gen(None, generator)
         s2 = self.std**2
         tot = s2 + sig**2
-        d2 = ((x_t[:, None, :] - self.means) ** 2).sum(-1)
+        d2 = self._sq_dist(x_t)
         r = torch.softmax(-0.5 * d2 / tot, -1)
         comp = torch.multinomial(r, 1, generator=g)[:, 0]
         mu = self.means[comp]
