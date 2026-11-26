@@ -1,0 +1,21 @@
+\section{Introduction}
+\label{sec:intro}
+
+Sampling from a Boltzmann density $\pi(x)\propto\exp(-\mathcal{E}(x))$ when only the energy $\mathcal{E}$ and its gradient are available is a core problem in Bayesian inference, statistical physics and molecular simulation~\citep{noe2019boltzmann}.
+Diffusion-based neural samplers have become a leading approach~\citep{zhang2022path,vargas2023denoising,berner2024optimal,akhound2024iterated}.
+Among them, \emph{energy-matching} methods are attractive because they are simulation-free in their inner loop.
+iDEM~\citep{akhound2024iterated} and its successors~\citep{bnem2024,iefm2024,cvsi2025,iwsm2025} regress a score network onto a Monte Carlo estimate of the noised score $\nabla\log p_t$, computed by self-normalized importance sampling (SNIS), at points obtained by noising samples from a replay buffer of model samples.
+
+This paper starts from an observation about the \emph{population optimum} of these objectives. The SNIS target depends only on the noised point and fresh proposals, never on the buffer sample that produced it. So the loss is minimized by the same field $b_K=\mathbb{E}[\widehat S_K]$ \emph{whatever the buffer contains}, and $b_K\neq\nabla\log p_t$ for finite $K$.
+Even a perfect sampler is therefore not a fixed point of training. The model is pulled towards a biased field, and the bias is largest at the moderate and high noise levels that set the shape and weights of the modes. More Monte Carlo samples shrink this bias only slowly, because the effective sample size of SNIS collapses exponentially with dimension and noise level.
+
+We point out that every energy-matching training pair already contains the missing ingredient: the clean buffer sample $x_0$ from which $x_t$ was generated. If the buffer were exact, $x_0$ would be an exact draw from the denoising posterior $\pi_t(\cdot\mid x_t)$. \textbf{Anchored Energy Matching (AEM)} adds $x_0$ as one extra particle to the SNIS estimate. This is the conditional importance sampling construction behind conditional SMC and i-SIR~\citep{andrieu2010particle,andrieu2018uniform}, here used to define a regression target instead of a Markov chain. The change is one line of code and one extra energy evaluation, and it has the following consequences.
+
+\begin{itemize}
+\item \textbf{Exact unbiasedness and a fixed point} (\cref{thm:unbiased}, \cref{cor:fixed}). With an exact anchor the AEM target is unbiased for every number of proposals $K\ge0$, and its covariance is bounded by that of single-sample score matching. The true noised score becomes a fixed point of training. The family interpolates between denoising/target score matching ($K=0$) and iDEM ($K\to\infty$).
+\item \textbf{Bias contraction} (\cref{thm:contraction}). With an inexact buffer, the target equals the posterior mean after one i-SIR step started from the buffer posterior. Its bias is therefore at most $(1-\epsilon_K)$ times the buffer's own error, with an explicit Doeblin constant.
+\item \textbf{Replay proposals} (\cref{sec:replay}). Because the theory holds for any anchor-independent proposal, a leave-one-out kernel mixture over the other buffer samples in the minibatch gives an exact, computable proposal density. Its importance weights let the energy re-weight modes the buffer has found.
+\item \textbf{An honest account of exploration.} The contraction constant also predicts how AEM fails. When proposals cannot reach a mode, the anchored target leans on the buffer, so AEM started from scratch inherits whatever modes the early buffer found. We confirm this empirically and give a simple remedy: explore with iDEM, then anchor. In this second phase the loss has $\pi$ as its fixed point instead of $b_K$.
+\end{itemize}
+
+Empirically (\cref{sec:experiments}), the anchored estimator reduces the score MSE by up to two to three orders of magnitude at high noise. In full sampler training, iDEM's fixed-point bias shows up as a distorted energy distribution within modes; AEM removes most of it, reducing the energy Wasserstein distance several-fold to over an order of magnitude on Gaussian mixtures in 16 dimensions and on the 32-dimensional many-well target, at matched cost. We also report where it does not help: in two dimensions, where SNIS is already accurate, and for mode discovery, which remains driven by the exploration phase.
