@@ -33,6 +33,8 @@ class TrainConfig:
     K: int = 100
     n_isir: int = 1
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
+    no_replace: int = 0  # 1: sample minibatch rows without replacement
+    oracle: int = 0  # 1: fixed buffer of exact target samples, no sampler loop (tests the fixed point directly)
     replay: int = 0  # 1: add replay (buffer-KDE) proposals, leave-one-out over the minibatch
     alpha: float = 0.5  # probability of a Gaussian (iDEM) proposal in the replay mixture
     tau_max: float = 1.0  # max KDE bandwidth; tau = min(sigma, tau_max)
@@ -58,7 +60,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -107,7 +109,10 @@ def train(cfg=None, **overrides):
 
     n_evals = 0
     t0 = time.time()
-    buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)  # buffer from the untrained network
+    if cfg.oracle:
+        buf = target.sample(cfg.buffer_size, seed=cfg.seed + 777).to(torch.float32)
+    else:
+        buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)  # buffer from the untrained network
     last_samples = None
     summary = {}
     log_path = os.path.join(cfg.out_dir, 'log.jsonl')
@@ -117,7 +122,10 @@ def train(cfg=None, **overrides):
             net.train()
             for _ in range(cfg.n_inner):
                 B = cfg.batch_size
-                idx = torch.randint(buf.shape[0], (B,), generator=gen)
+                if cfg.no_replace:  # without replacement: exact leave-one-out for replay proposals
+                    idx = torch.randperm(buf.shape[0], generator=gen)[:B]
+                else:
+                    idx = torch.randint(buf.shape[0], (B,), generator=gen)
                 x0 = buf[idx]
                 t = torch.rand(B, generator=gen, dtype=x0.dtype)
                 sig = smin * torch.exp(t * log_ratio)
@@ -163,8 +171,9 @@ def train(cfg=None, **overrides):
                 losses.append(loss.item())
                 n_evals += B * (cfg.K + p_anchor) * (cfg.n_isir if p_anchor > 0 else 1)
 
-            new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
-            buf = torch.cat([buf, new])[-cfg.buffer_size:]
+            if not cfg.oracle:
+                new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
+                buf = torch.cat([buf, new])[-cfg.buffer_size:]
 
             if it % cfg.eval_every == 0 or it == cfg.n_outer:
                 net.eval()
