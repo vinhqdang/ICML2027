@@ -1,0 +1,46 @@
+\section{Experiments}
+\label{sec:experiments}
+
+We ask three questions.
+(Q1)~Does anchoring reduce the bias and MSE of the score target as the theory predicts, including with an imperfect buffer?
+(Q2)~Does a less biased target give better samplers in full iDEM-style training?
+(Q3)~Where does anchoring fail, and does the failure match \cref{thm:contraction}?
+All methods share one codebase, network, noise schedule, test function, proposal count ($K=100$) and training budget (\cref{app:exp}). The only differences are the regression target and, for the explore$\to$anchor variants, the iteration at which the anchor is switched on.
+
+% -------------------------------------------------------------
+\subsection{Estimator study (Q1)}
+\label{sec:exp-estimator}
+For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evaluate $\nabla\log p_t$ in closed form, so bias and variance can be measured directly.
+\Cref{fig:estimator} reports the relative MSE and relative squared bias of each estimator over 12 noise levels, averaged over 256 points and 32 independent repeats. In each repeat the proposals and the anchor are redrawn.
+\input{sec_exp_estimator_text}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_estimator_gmm40.pdf}
+\caption{\textbf{Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma_t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma_t$.}
+\label{fig:estimator}
+\end{figure*}
+
+% -------------------------------------------------------------
+\subsection{Training samplers (Q2)}
+\label{sec:exp-training}
+\input{sec_exp_training_text}
+
+\begin{table*}[t]
+\centering
+\caption{\textbf{Sampler quality after 40 outer iterations} (mean $\pm$ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$).}
+\label{tab:main}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Method & $\mathcal{W}_2$ & $\mathcal{E}$-$\mathcal{W}_1$ & MMD & mode TV & var.\ ratio \\
+\midrule
+\input{tab_main_body}
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% -------------------------------------------------------------
+\subsection{Where anchoring fails (Q3)}
+\label{sec:exp-ablation}
+\input{sec_exp_failure_text}
