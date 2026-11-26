@@ -99,9 +99,11 @@ using $\bar w\le M_t$, the independence of $y_1$ from $y_{2:K}$, Jensen's inequa
 A Doeblin minorization with constant $\epsilon_K$ contracts total variation by $(1-\epsilon_K)$ per step.
 \end{proof}
 
-\Cref{thm:contraction} formalizes a self-correcting loop. The regression target reflects the target $\pi$ more faithfully than the buffer that produced it, so each outer iteration can only reduce the dependence on buffer errors.
-It also gives graceful degradation. A poor anchor (low $\tilde\pi(x_0)$) gets negligible weight and AEM reduces to iDEM; a good anchor dominates exactly when the proposals miss every mode, which is the regime where iDEM's SNIS collapses onto whichever proposal happens to land closest to a mode.
-The minorization constant shows the limitation honestly: when $M_t$ is large (high noise, high dimension), contraction per step is weak. Then the target leans on the buffer, and exploration has to come from the intermediate noise levels, where the proposals do reach other modes. We study this trade-off empirically in \cref{sec:exp-ablation}.
+\paragraph{Reading the bound.}
+\Cref{thm:contraction} is a pointwise statement: for each $x_t$, the regression target is closer to the true posterior mean than the buffer's posterior is to the true posterior, by a factor $1-\epsilon_K$. It does not by itself prove that the outer loop converges. That would also require controlling how the learned score maps back into a new buffer, which we leave open.
+It also explains graceful degradation. A poor anchor (low $\tilde\pi(x_0)$) gets negligible weight and AEM reduces to iDEM. A good anchor dominates exactly when the proposals miss every mode, which is where iDEM's SNIS collapses onto whichever proposal lands closest to a mode.
+The constant is also honest about the limitation. For Gaussian proposals, $M_t$ grows exponentially with dimension (for a unit Gaussian component near its mode, $M_t\approx e^{d/2}$). So for $d\ge16$ and practical $K$, the guaranteed contraction is weak ($\epsilon_K\ll1$), and $1-\epsilon_K$ decays only like $1/K$. In that regime the anchored target leans on the buffer, and the theorem predicts that AEM keeps, rather than corrects, buffer errors that no proposal can see. \Cref{sec:exp-ablation} shows exactly this.
+Finally, the TSI and DSI test functions are unbounded. For them the bound holds after clipping $g$, which we do in practice, or in a weighted norm under a drift condition that we do not verify.
 
 \subsection{Replay proposals: letting the energy correct the buffer}
 \label{sec:replay}
@@ -112,7 +114,7 @@ q_i(y)=\alpha\,\mathcal{N}(y;x_t^{(i)},\sigma_t^2I)+(1-\alpha)\!\sum_{j\neq i}r_
 \label{eq:replay}
 \end{equation}
 with responsibilities $r_{ij}\propto\mathcal{N}(x_t^{(i)};x_0^{(j)},(\sigma_t^2+\tau_t^2)I)$ and bandwidth $\tau_t=\min(\sigma_t,\tau_{\max})$.
-Because $q_i$ excludes row $i$, it is independent of the anchor $x_0^{(i)}$, and its density is available in closed form.
+Because $q_i$ excludes row $i$, it is independent of the anchor $x_0^{(i)}$, as long as minibatch rows are distinct buffer points, and its density is available in closed form.\footnote{The training runs in \cref{sec:experiments} drew minibatch rows with replacement. The same buffer point can then appear in another row (probability $\approx2.5\%$ per row for $B=256$ and a buffer of $10^4$), which slightly violates independence. Our code provides sampling without replacement, which we use for the oracle experiment in \cref{sec:exp-ablation}.}
 The weights $w(y)=\tilde\pi(y)\mathcal{N}(x_t;y,\sigma_t^2I)/q_i(y)$ are therefore exact, and both theorems apply unchanged.
 The mixture has three effects.
 (i)~Proposals now land in the modes the buffer has already found, so $M_t$, and with it the bias constant $1-\epsilon_K$, shrinks sharply.
@@ -120,9 +122,12 @@ The mixture has three effects.
 (iii)~The Gaussian component ($\alpha>0$) keeps iDEM's exploration of modes the buffer has not found.
 The cost is one $B\times B$ distance matrix and a $B\times K\times B$ log-sum-exp per step, which is negligible next to the energy evaluations.
 
-\paragraph{Variance-optimal combination.}
+\paragraph{Combining TSI and DSI.}
 Since every $g$ gives an unbiased target under the same particles and weights, any combination $\alpha_t g_{\mathrm{TSI}}+(1-\alpha_t)g_{\mathrm{DSI}}$ is also unbiased (\cref{thm:unbiased}).
-A precision-weighted schedule that trusts TSI at low noise and DSI at high noise keeps unbiasedness and removes most of the residual variance. Unlike the control-variate coefficient of \citet{cvsi2025}, it needs no per-batch estimation, which would reintroduce bias.
+We use the fixed schedule $\alpha_t=(1+\sigma_t^2)^{-1}$, which trusts TSI at low noise and DSI at high noise. For a target whose components are unit-covariance Gaussians, it makes the per-particle test function constant within a component, so the estimator has zero within-component variance. For other targets it is only a heuristic; a target-adapted choice would use the local curvature. Unlike the control-variate coefficient of \citet{cvsi2025}, it requires no per-batch estimation, which would reintroduce bias. Because this schedule favours unit-variance components, we give it to every method, iDEM included, and we check robustness to non-unit components in \cref{app:extra}.
+
+\paragraph{Practical deviations from the theory.}
+The exactness statements above concern the idealized estimator. Our implementation clips per-particle energy gradients and caps the norm of $\sigma_t\times$target, for stability and identically for all methods. Both are nonlinear and introduce a small bias. In addition, the buffer is a finite set of model samples that is reused across many steps, so even at convergence it is only approximately $\pi$.
 
 \begin{algorithm}[t]
 \caption{Anchored Energy Matching (AEM)}

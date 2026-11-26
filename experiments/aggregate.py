@@ -80,7 +80,7 @@ def table(runs):
             cells = []
             for m in ms:
                 v = np.array([r[-1][m] for r in runs[(t, me)]])
-                s = f'{v.mean():.3g}{{\\scriptsize$\\pm${v.std():.2g}}}'
+                s = f'{v.mean():.3g}{{\\scriptsize$\\pm${v.std(ddof=1):.2g}}}'
                 cells.append(f'\\textbf{{{s}}}' if best[m] == me else s)
             lines.append(f'{METH_NAME[me]} & ' + ' & '.join(cells) + f' \\\\  % n={len(runs[(t, me)])}')
         lines.append('\\midrule')
