@@ -32,6 +32,7 @@ class TrainConfig:
     K: int = 100
     n_isir: int = 1
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
+    out_clip: Optional[float] = None  # cap on ||sigma*s|| for targets and sampling; None: 10*sqrt(d); 0: off
     sigma_min: Optional[float] = None  # None: default for the target
     sigma_max: Optional[float] = None
     seed: int = 0
@@ -59,8 +60,9 @@ def _json_safe(d):
     return {k: (float(v) if isinstance(v, (np.floating, float)) else v) for k, v in d.items()}
 
 
-def _sde(net, n, dim, smin, smax, steps, gen, batch_size=10000):
-    x = sample_model(net, n, dim, smin, smax, n_steps=steps, generator=gen, batch_size=batch_size)
+def _sde(net, n, dim, smin, smax, steps, gen, batch_size=10000, score_clip=None):
+    x = sample_model(net, n, dim, smin, smax, n_steps=steps, generator=gen, batch_size=batch_size,
+                     score_clip=score_clip)
     return x[torch.isfinite(x).all(dim=1)]
 
 
@@ -87,6 +89,7 @@ def train(cfg=None, **overrides):
     gen.manual_seed(cfg.seed)
     target = get_target(cfg.target, **({} if cfg.dim is None else {'dim': cfg.dim}))
     d = target.dim
+    oc = 10.0 * math.sqrt(d) if cfg.out_clip is None else (cfg.out_clip or None)
 
     net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb, sigma_min=smin, sigma_max=smax)
     opt = torch.optim.Adam(net.parameters(), lr=cfg.lr)
@@ -98,7 +101,7 @@ def train(cfg=None, **overrides):
 
     n_evals = 0
     t0 = time.time()
-    buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen)  # buffer from the untrained network
+    buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)  # buffer from the untrained network
     last_samples = None
     summary = {}
     log_path = os.path.join(cfg.out_dir, 'log.jsonl')
@@ -116,6 +119,9 @@ def train(cfg=None, **overrides):
                 x_t = x0 + sig[:, None] * eps
                 tgt = score_estimate(x_t, sig, target, cfg.K, anchor=x0 if anchored else None,
                                      kind=cfg.kind, n_isir=cfg.n_isir, clip=clip, generator=gen)
+                if oc is not None:  # cap ||sigma * target|| (same rule for every method)
+                    nrm = sig[:, None] * tgt.norm(dim=-1, keepdim=True)
+                    tgt = tgt * torch.clamp(oc / nrm.clamp_min(1e-30), max=1.0)
                 s = net.score(x_t, t)
                 loss = ((sig[:, None] ** 2) * (s - tgt) ** 2).sum(1).mean() / d
                 opt.zero_grad()
@@ -125,14 +131,14 @@ def train(cfg=None, **overrides):
                 losses.append(loss.item())
                 n_evals += B * (cfg.K + int(anchored)) * cfg.n_isir
 
-            new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen)
+            new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
             buf = torch.cat([buf, new])[-cfg.buffer_size:]
 
             if it % cfg.eval_every == 0 or it == cfg.n_outer:
                 net.eval()
                 eval_gen = torch.Generator()
                 eval_gen.manual_seed(cfg.seed + 1)
-                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen).numpy()
+                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen, score_clip=oc).numpy()
                 metrics = compute_all(target, last_samples, ref)
                 rec = {'iter': it, 'wall_time': time.time() - t0, 'n_energy_evals': n_evals,
                        'loss': float(np.mean(losses)), 'buffer_size': int(buf.shape[0]), **metrics}

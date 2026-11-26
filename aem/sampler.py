@@ -12,7 +12,7 @@ def reverse_sde_sample(score_fn, n, dim, sigma_min, sigma_max, n_steps=1000, gen
     score_fn(x, t) takes x [b, dim] and t [b] and returns the score [b, dim].
     Start: x ~ N(0, sigma_max^2 I). Update backward in time:
         x <- x + g^2(t) s(x, t) dt + g(t) sqrt(dt) z,   g^2(t) = 2 sigma(t)^2 log(sigma_max / sigma_min),
-    with no noise on the final step. score_clip, if given, caps the per-sample score norm.
+    with no noise on the final step. score_clip, if given, caps the norm of sigma(t) * s per sample.
     """
     log_ratio = math.log(sigma_max / sigma_min)
     dt = 1.0 / n_steps
@@ -23,10 +23,10 @@ def reverse_sde_sample(score_fn, n, dim, sigma_min, sigma_max, n_steps=1000, gen
         for k in range(n_steps):
             t = 1.0 - k * dt
             s = score_fn(x, torch.full((b,), t, dtype=dtype))
-            if score_clip is not None:
-                nrm = s.norm(dim=-1, keepdim=True)
-                s = s * torch.clamp(score_clip / nrm.clamp_min(1e-30), max=1.0)
             sig = sigma_min * (sigma_max / sigma_min) ** t
+            if score_clip is not None:  # clip the preconditioned score sigma * s (scale-free)
+                nrm = sig * s.norm(dim=-1, keepdim=True)
+                s = s * torch.clamp(score_clip / nrm.clamp_min(1e-30), max=1.0)
             g2 = 2.0 * sig**2 * log_ratio
             x = x + g2 * s * dt
             if k < n_steps - 1:
