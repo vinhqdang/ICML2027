@@ -127,7 +127,7 @@ def train(cfg=None, **overrides):
                 if anchored:
                     p_anchor = 1.0 if cfg.anchor_ramp == 0 else (it - cfg.anchor_warmup) / cfg.anchor_ramp
                     p_anchor = float(min(1.0, max(0.0, p_anchor))) if it > cfg.anchor_warmup else 0.0
-                if cfg.replay:
+                if cfg.replay and p_anchor > 0.0:  # replay proposals only once anchoring is active
                     if p_anchor >= 1.0:
                         anc = x0
                     elif p_anchor <= 0.0:

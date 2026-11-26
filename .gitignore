@@ -224,3 +224,5 @@ __marimo__/
 results/pilot/
 results/smoke/
 *.pt
+results/main/**/model.pt
+results/main/**/stdout.txt
