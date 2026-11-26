@@ -1,1 +1,23 @@
+On MW-32 the result is unambiguous. Trained on exact samples, iDEM learns a score whose relative error is $22$--$32$ at $\sigma_t\in\{1,2\}$, against $0.08$--$0.14$ for AEM. Its samples have Gaussian-coordinate variance $16.6$ (AEM: $1.21$), $\mathcal{W}_2=15.0$ (AEM: $7.0$) and MMD $0.22$ (AEM: $0.02$).
+With a perfect buffer, AEM also gets the mode weights right: the fraction of double-well coordinates in the major well is $0.837$, against a true $0.842$ (iDEM: $0.898$), and the mode TV is $0.06$ (iDEM: $0.16$). So the mode-weight deficits of \cref{tab:main} come from the self-generated buffer, as \cref{thm:contraction} predicts, and not from the anchored target.
+Because the network never sees off-data regions in this setting, a minority of AEM's reverse-SDE trajectories end in the tails of the quartic wells, which inflates its $\mathcal{E}$-$\mathcal{W}_1$. This is an artifact of training without the sampler loop.
+On GMM-10, where the TSI/DSI combination is exact within each unit-variance component, the two methods learn similar scores at moderate noise. AEM is more accurate at low noise (relative error $0.14$ vs.\ $0.27$ at $\sigma_t=0.03$), and gives lower $\mathcal{E}$-$\mathcal{W}_1$ ($0.51$ vs.\ $1.13$), variance ratio ($1.08$ vs.\ $1.16$) and mode TV ($0.08$ vs.\ $0.10$).
 
+\begin{table}[t]
+\centering
+\caption{\textbf{Oracle buffer} (fixed exact samples, no sampler loop; single seed, $K=100$). Relative error $\mathbb{E}\|s_\theta-\nabla\log p_t\|^2/\mathbb{E}\|\nabla\log p_t\|^2$ of the learned score at several noise levels.}
+\label{tab:oracle}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccc}
+\toprule
+& & \multicolumn{5}{c}{$\sigma_t$}\\
+target & method & 0.03 & 0.1 & 0.3 & 1 & 2\\
+\midrule
+MW-32 & iDEM & 1.26 & 0.91 & 1.04 & 22.4 & 32.5\\
+ & AEM & \textbf{0.75} & \textbf{0.52} & \textbf{0.35} & \textbf{0.14} & \textbf{0.08}\\
+GMM-10 & iDEM & 0.27 & 0.052 & \textbf{0.013} & \textbf{0.011} & 0.008\\
+ & AEM & \textbf{0.14} & \textbf{0.039} & 0.016 & 0.013 & \textbf{0.007}\\
+\bottomrule
+\end{tabular}
+\end{table}
