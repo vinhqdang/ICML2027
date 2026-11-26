@@ -39,7 +39,8 @@ def main(paths):
                     c, ls = STYLE[(est, K)]
                     g = g.sort_values('sigma')
                     axes[0, col].plot(g.sigma, g.rel_mse, color=c, ls=ls, label=label(est, K))
-                    axes[1, col].plot(g.sigma, g.rel_bias2_c + 1e-12, color=c, ls=ls)
+                    axes[1, col].plot(g.sigma, g.rel_bias2_c.clip(lower=1e-7), color=c, ls=ls)
+                axes[1, col].set_ylim(bottom=5e-8)
                 axes[0, col].set_title(f'{anc} anchor, {kind.upper()}', fontsize=9)
                 for r in range(2):
                     axes[r, col].set_xscale('log'); axes[r, col].set_yscale('log')
