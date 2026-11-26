@@ -1,0 +1,194 @@
+\begin{thebibliography}{29}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Akhound-Sadegh et~al.(2024)Akhound-Sadegh, Rector-Brooks, Bose,
+  Mittal, Lemos, Liu, Sendera, Ravanbakhsh, Gidel, Bengio, Malkin, and
+  Tong]{akhound2024iterated}
+Akhound-Sadegh, T., Rector-Brooks, J., Bose, A.~J., Mittal, S., Lemos, P., Liu,
+  C.-H., Sendera, M., Ravanbakhsh, S., Gidel, G., Bengio, Y., Malkin, N., and
+  Tong, A.
+\newblock Iterated denoising energy matching for sampling from {B}oltzmann
+  densities.
+\newblock In \emph{International Conference on Machine Learning}, 2024.
+
+\bibitem[Andrieu et~al.(2010)Andrieu, Doucet, and
+  Holenstein]{andrieu2010particle}
+Andrieu, C., Doucet, A., and Holenstein, R.
+\newblock Particle {M}arkov chain {M}onte {C}arlo methods.
+\newblock \emph{Journal of the Royal Statistical Society: Series B},
+  72\penalty0 (3):\penalty0 269--342, 2010.
+
+\bibitem[Andrieu et~al.(2018)Andrieu, Lee, and Vihola]{andrieu2018uniform}
+Andrieu, C., Lee, A., and Vihola, M.
+\newblock Uniform ergodicity of the iterated conditional {SMC} and geometric
+  ergodicity of particle {G}ibbs samplers.
+\newblock \emph{Bernoulli}, 24\penalty0 (2):\penalty0 842--872, 2018.
+
+\bibitem[Berner et~al.(2024)Berner, Richter, and Ullrich]{berner2024optimal}
+Berner, J., Richter, L., and Ullrich, K.
+\newblock An optimal control perspective on diffusion-based generative
+  modeling.
+\newblock \emph{Transactions on Machine Learning Research}, 2024.
+
+\bibitem[De~Bortoli et~al.(2024)De~Bortoli, Hutchinson, Wirnsberger, and
+  Doucet]{debortoli2024target}
+De~Bortoli, V., Hutchinson, M., Wirnsberger, P., and Doucet, A.
+\newblock Target score matching.
+\newblock \emph{arXiv preprint arXiv:2402.08667}, 2024.
+
+\bibitem[Dern et~al.(2025)Dern, Redl, Pfister, Kollovieh, L{\"u}dke, and
+  G{\"u}nnemann]{ewfm2025}
+Dern, N., Redl, L., Pfister, S., Kollovieh, M., L{\"u}dke, D., and
+  G{\"u}nnemann, S.
+\newblock Energy-weighted flow matching: Unlocking continuous normalizing flows
+  for efficient and scalable {B}oltzmann sampling.
+\newblock \emph{arXiv preprint arXiv:2509.03726}, 2025.
+
+\bibitem[Guo et~al.(2026)Guo, Choi, Zhu, Tao, and Chen]{proximal2025}
+Guo, W., Choi, J., Zhu, Y., Tao, M., and Chen, Y.
+\newblock Proximal diffusion neural sampler.
+\newblock In \emph{International Conference on Learning Representations}, 2026.
+
+\bibitem[Havens et~al.(2025)Havens, Miller, Yan, Domingo-Enrich, Sriram, Wood,
+  Levine, Hu, Amos, Karrer, Fu, Liu, and Chen]{havens2025adjoint}
+Havens, A., Miller, B.~K., Yan, B., Domingo-Enrich, C., Sriram, A., Wood, B.,
+  Levine, D., Hu, B., Amos, B., Karrer, B., Fu, X., Liu, G.-H., and Chen, R.
+  T.~Q.
+\newblock Adjoint sampling: Highly scalable diffusion samplers via adjoint
+  matching.
+\newblock In \emph{International Conference on Machine Learning}, 2025.
+
+\bibitem[Huang et~al.(2024)Huang, Dong, Hao, Ma, and Zhang]{huang2024reverse}
+Huang, X., Dong, H., Hao, Y., Ma, Y., and Zhang, T.
+\newblock Reverse diffusion {M}onte {C}arlo.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Hyv{\"a}rinen(2005)]{hyvarinen2005estimation}
+Hyv{\"a}rinen, A.
+\newblock Estimation of non-normalized statistical models by score matching.
+\newblock \emph{Journal of Machine Learning Research}, 6:\penalty0 695--709,
+  2005.
+
+\bibitem[Kahouli et~al.(2025)Kahouli, Elie, M{\"u}ller, Berthet, Unke, and
+  Doucet]{cvsi2025}
+Kahouli, K., Elie, R., M{\"u}ller, K.-R., Berthet, Q., Unke, O.~T., and Doucet,
+  A.
+\newblock Control variate score matching for diffusion models.
+\newblock \emph{arXiv preprint arXiv:2512.20003}, 2025.
+
+\bibitem[Midgley et~al.(2023)Midgley, Stimper, Simm, Sch{\"o}lkopf, and
+  Hern{\'a}ndez-Lobato]{midgley2023flow}
+Midgley, L.~I., Stimper, V., Simm, G. N.~C., Sch{\"o}lkopf, B., and
+  Hern{\'a}ndez-Lobato, J.~M.
+\newblock Flow annealed importance sampling bootstrap.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+
+\bibitem[No{\'e} et~al.(2019)No{\'e}, Olsson, K{\"o}hler, and
+  Wu]{noe2019boltzmann}
+No{\'e}, F., Olsson, S., K{\"o}hler, J., and Wu, H.
+\newblock Boltzmann generators: Sampling equilibrium states of many-body
+  systems with deep learning.
+\newblock \emph{Science}, 365\penalty0 (6457), 2019.
+
+\bibitem[OuYang et~al.(2026)OuYang, Qiang, and Hern{\'a}ndez-Lobato]{bnem2024}
+OuYang, R., Qiang, B., and Hern{\'a}ndez-Lobato, J.~M.
+\newblock {BNEM}: A {B}oltzmann sampler based on bootstrapped noised energy
+  matching.
+\newblock \emph{Transactions on Machine Learning Research}, 2026.
+
+\bibitem[Owen(2013)]{owen2013monte}
+Owen, A.~B.
+\newblock \emph{{M}onte {C}arlo theory, methods and examples}.
+\newblock Stanford, 2013.
+
+\bibitem[Phillips et~al.(2024)Phillips, Dau, Hutchinson, De~Bortoli,
+  Deligiannidis, and Doucet]{phillips2024particle}
+Phillips, A., Dau, H.-D., Hutchinson, M.~J., De~Bortoli, V., Deligiannidis, G.,
+  and Doucet, A.
+\newblock Particle denoising diffusion sampler.
+\newblock In \emph{International Conference on Machine Learning}, 2024.
+
+\bibitem[Richter \& Berner(2024)Richter and Berner]{richter2024improved}
+Richter, L. and Berner, J.
+\newblock Improved sampling via learned diffusions.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Sanokowski et~al.(2025)Sanokowski, Gruber, Bartmann, Hochreiter, and
+  Lehner]{bridgelosses2025}
+Sanokowski, S., Gruber, L., Bartmann, C., Hochreiter, S., and Lehner, S.
+\newblock Rethinking losses for diffusion bridge samplers.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2025.
+
+\bibitem[Sendera et~al.(2024)Sendera, Kim, Mittal, Lemos, Scimeca,
+  Rector-Brooks, Adam, Bengio, and Malkin]{sendera2024improved}
+Sendera, M., Kim, M., Mittal, S., Lemos, P., Scimeca, L., Rector-Brooks, J.,
+  Adam, A., Bengio, Y., and Malkin, N.
+\newblock Improved off-policy training of diffusion samplers.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem[Song et~al.(2021)Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and
+  Poole]{song2021score}
+Song, Y., Sohl-Dickstein, J., Kingma, D.~P., Kumar, A., Ermon, S., and Poole,
+  B.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Tjelmeland(2004)]{tjelmeland2004using}
+Tjelmeland, H.
+\newblock Using all {M}etropolis--{H}astings proposals to estimate mean values.
+\newblock \emph{Technical report, Norwegian University of Science and
+  Technology}, 2004.
+
+\bibitem[Vargas et~al.(2023)Vargas, Grathwohl, and Doucet]{vargas2023denoising}
+Vargas, F., Grathwohl, W., and Doucet, A.
+\newblock Denoising diffusion samplers.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+
+\bibitem[Vargas et~al.(2024)Vargas, Padhy, Blessing, and
+  N{\"u}sken]{vargas2024transport}
+Vargas, F., Padhy, S., Blessing, D., and N{\"u}sken, N.
+\newblock Transport meets variational inference: Controlled {M}onte {C}arlo
+  diffusions.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Vincent(2011)]{vincent2011connection}
+Vincent, P.
+\newblock A connection between score matching and denoising autoencoders.
+\newblock \emph{Neural Computation}, 23\penalty0 (7):\penalty0 1661--1674,
+  2011.
+
+\bibitem[Wang et~al.(2025)Wang, Zhang, Cui, Zhao, Guan, and Yu]{iwsm2025}
+Wang, C., Zhang, X., Cui, K., Zhao, W., Guan, Y., and Yu, T.
+\newblock Importance weighted score matching for diffusion samplers with
+  enhanced mode coverage.
+\newblock \emph{arXiv preprint arXiv:2505.19431}, 2025.
+
+\bibitem[Woo \& Ahn(2024)Woo and Ahn]{iefm2024}
+Woo, D. and Ahn, S.
+\newblock Iterated energy-based flow matching for sampling from {B}oltzmann
+  densities.
+\newblock \emph{arXiv preprint arXiv:2408.16249}, 2024.
+
+\bibitem[Xu et~al.(2023)Xu, Tong, and Jaakkola]{xu2023stable}
+Xu, Y., Tong, S., and Jaakkola, T.
+\newblock Stable target field for reduced variance score estimation in
+  diffusion models.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+
+\bibitem[Yang et~al.(2026)Yang, Zhang, Yu, Hou, Tao, Wan, Qi, and
+  Liao]{stablevelocity2026}
+Yang, D., Zhang, Y., Yu, X., Hou, L., Tao, X., Wan, P., Qi, X., and Liao, R.
+\newblock Stable velocity: A variance perspective on flow matching.
+\newblock In \emph{International Conference on Machine Learning}, 2026.
+
+\bibitem[Zhang \& Chen(2022)Zhang and Chen]{zhang2022path}
+Zhang, Q. and Chen, Y.
+\newblock Path integral sampler: A stochastic control approach for sampling.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
+\end{thebibliography}

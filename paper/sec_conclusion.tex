@@ -1,0 +1,7 @@
+\section{Conclusion}
+\label{sec:conclusion}
+Energy-matching samplers regress onto Monte Carlo targets that ignore the one exact posterior sample every training pair already contains. Putting that sample back as an anchor turns a biased target into an unbiased one with a provably bounded variance, and it makes the target distribution a fixed point of training. The change costs one line of code and one energy evaluation.
+Our experiments separate two effects that are usually measured together. Anchoring removes the within-mode distortion caused by SNIS bias; it does not by itself discover modes. The same contraction constant that certifies its unbiasedness predicts this limitation.
+We see two directions for future work. One is to pair anchored targets with exploration mechanisms that do not rely on biased estimators, such as tempering, annealed importance sampling or parallel chains across noise levels. The other is to bring anchoring to related objectives that use SNIS targets: noised-energy matching, flow-matching samplers and amortized posterior inference.
+\paragraph{Limitations.}
+Our experiments use synthetic targets of up to 32 dimensions and run on CPUs only, and we did not tune each baseline separately. All methods share one codebase and a stabilized target function, so absolute numbers differ from those of the original iDEM implementation. We have not evaluated molecular systems such as Lennard-Jones clusters, which need equivariant networks.

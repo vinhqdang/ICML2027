@@ -1,0 +1,32 @@
+\section{Additional results}
+\label{app:extra}
+
+\paragraph{Replay proposals at the estimator level.}
+\Cref{tab:replay} compares four estimators on GMM-10 ($d=16$, $K=100$, precision-weighted test function, 128 points, 8 repeats). The four are iDEM, AEM with Gaussian proposals, replay-SNIS without an anchor, and AEM with replay proposals. Three buffers are used: exact; \emph{skewed}, where half of the modes are over-represented $4{:}1$; and \emph{dropped}, where half of the modes are missing. The anchors and the replay reference set come from the buffer.
+At low noise all estimators are essentially exact, because the precision-weighted test function has zero variance within a unit Gaussian component.
+At high noise, replay proposals reduce the MSE $2$--$4\times$ compared with Gaussian proposals.
+With a skewed buffer, combining the anchor with replay proposals gives the smallest bias at $\sigma_t\approx9.4$ ($1.9\cdot10^{-3}$ vs.\ $9.7\cdot10^{-3}$ for iDEM): the importance weights correct the over-represented modes.
+With a dropped buffer, every buffer-informed estimator inherits the missing modes at high noise (bias $\approx4.7\cdot10^{-2}$ vs.\ $4.3\cdot10^{-3}$ for iDEM). This is the exploration limitation discussed in \cref{sec:exp-ablation}.
+
+\begin{table}[h]
+\centering
+\caption{Relative MSE (relative squared bias in parentheses) of the score target on GMM-10 ($d=16$) at high noise.}
+\label{tab:replay}
+\small
+\begin{tabular}{llcccc}
+\toprule
+buffer & $\sigma_t$ & iDEM & AEM & replay & AEM + replay\\
+\midrule
+exact & 4.4 & 5.8e-2 (7.8e-3) & 2.3e-2 (0) & 6.5e-3 (7.8e-4) & 1.4e-2 (0)\\
+exact & 9.4 & 1.5e-1 (1.3e-2) & 9.9e-2 (5.5e-4) & 3.6e-2 (0) & 4.7e-2 (0)\\
+skewed & 4.4 & 3.4e-2 (4.1e-3) & 2.1e-2 (2.5e-3) & 7.4e-3 (8.4e-4) & 1.0e-2 (5.8e-4)\\
+skewed & 9.4 & 1.7e-1 (9.7e-3) & 1.1e-1 (8.9e-3) & 4.5e-2 (7.7e-3) & 5.6e-2 (1.9e-3)\\
+dropped & 4.4 & 3.6e-2 (4.3e-3) & 1.3e-2 (4.2e-4) & 3.3e-3 (5.2e-4) & 6.2e-3 (1.3e-4)\\
+dropped & 9.4 & 1.4e-1 (4.3e-3) & 1.1e-1 (4.7e-2) & 6.5e-2 (4.6e-2) & 6.9e-2 (4.7e-2)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cold-start ablations (single seed, GMM-10, $d=16$).}
+After 10 outer iterations, replay proposals used from the start collapse onto the buffer's modes: iDEM with replay covers $2/10$ modes (mode TV $0.90$), and AEM with replay also covers $2/10$ (mode TV $0.90$). Plain iDEM covers $8/10$ (mode TV $0.59$) and cold AEM $5/10$ (mode TV $0.70$).
+This motivates switching replay on only in the anchored phase of explore$\to$anchor training, as we do for AEM-R.
