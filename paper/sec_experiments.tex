@@ -28,7 +28,7 @@ For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evalua
 
 \begin{table*}[t]
 \centering
-\caption{\textbf{Sampler quality after 40 outer iterations} (mean $\pm$ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$).}
+\caption{\textbf{Sampler quality after 40 outer iterations} (mean $\pm$ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$). MMD is the unbiased estimate of MMD$^2$, which can be slightly negative.}
 \label{tab:main}
 \small
 \begin{tabular}{lccccc}
