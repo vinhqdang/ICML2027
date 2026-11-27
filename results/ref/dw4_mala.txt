@@ -1,0 +1,17 @@
+  burn-in 2000/20000: acc=0.610 median h=8.32e-02  (12 s)
+  burn-in 4000/20000: acc=0.603 median h=8.36e-02  (22 s)
+  burn-in 6000/20000: acc=0.615 median h=8.35e-02  (33 s)
+  burn-in 8000/20000: acc=0.595 median h=8.32e-02  (43 s)
+  burn-in 10000/20000: acc=0.592 median h=8.33e-02  (52 s)
+  burn-in 12000/20000: acc=0.605 median h=8.33e-02  (63 s)
+  burn-in 14000/20000: acc=0.593 median h=8.35e-02  (73 s)
+  burn-in 16000/20000: acc=0.619 median h=8.35e-02  (83 s)
+  burn-in 18000/20000: acc=0.608 median h=8.36e-02  (93 s)
+  burn-in 20000/20000: acc=0.590 median h=8.35e-02  (103 s)
+  sampling 2000/10000: running acc=0.599  (114 s)
+  sampling 4000/10000: running acc=0.600  (124 s)
+  sampling 6000/10000: running acc=0.600  (135 s)
+  sampling 8000/10000: running acc=0.600  (144 s)
+  sampling 10000/10000: running acc=0.600  (155 s)
+wrote 400000 samples to /content/A/out/dw4_ref.pt
+  acceptance (sampling phase) = 0.600, step size median = 8.35e-02, mean pair distance = 3.974, mean energy = -9.753, time = 155 s

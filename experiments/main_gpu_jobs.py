@@ -5,8 +5,9 @@ Usage: python experiments/main_gpu_jobs.py [--seeds 0,1,2] [--targets ...] [--me
 """
 import argparse
 
-N_OUTER, WARM = 80, 40
-COMMON = f'--kind mix --K 100 --n_outer {N_OUTER} --n_inner 100 --n_eval 2000 --eval_every 20'
+# (n_outer, anchor_warmup, eval_every) per target; the molecular runs are shorter because the EGNN is slower
+BUDGET = {'gmm16': (80, 40, 20), 'mw32': (80, 40, 20), 'dw4': (40, 20, 10), 'lj13': (40, 20, 10)}
+COMMON = '--kind mix --K 100 --n_inner 100 --n_eval 2000'
 TARGETS = {
     'gmm16': '--target gmm_d --dim 16 --sde_steps 200 --sde_steps_eval 500 --refine_sigma_max 1.0',
     'mw32': '--target mw32 --sde_steps 300 --sde_steps_eval 1000 --tau_max 0.5 --refine_sigma_max 1.0',
@@ -16,8 +17,8 @@ TARGETS = {
 METHODS = {
     'idem': '--method idem',
     'aem_cold': '--method aem',
-    'aem_ea': f'--method aem --anchor_warmup {WARM}',
-    'aem_ea_refine': f'--method aem --anchor_warmup {WARM} --refine 1',
+    'aem_ea': '--method aem --anchor_warmup {warm}',
+    'aem_ea_refine': '--method aem --anchor_warmup {warm} --refine 1',
 }
 
 if __name__ == '__main__':
@@ -29,4 +30,6 @@ if __name__ == '__main__':
     for s in a.seeds.split(','):
         for t in a.targets.split(','):
             for m in a.methods.split(','):
-                print(f'{t}/{m}/seed{s} {COMMON} {TARGETS[t]} {METHODS[m]} --seed {s}')
+                n, warm, ev = BUDGET[t]
+                meth = METHODS[m].format(warm=warm)
+                print(f'{t}/{m}/seed{s} {COMMON} --n_outer {n} --eval_every {ev} {TARGETS[t]} {meth} --seed {s}')
