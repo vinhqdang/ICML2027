@@ -129,6 +129,23 @@ We use the fixed schedule $\alpha_t=(1+\sigma_t^2)^{-1}$, which trusts TSI at lo
 \paragraph{Practical deviations from the theory.}
 The exactness statements above concern the idealized estimator. Our implementation clips per-particle energy gradients and caps the norm of $\sigma_t\times$target, for stability and identically for all methods. Both are nonlinear and introduce a small bias. In addition, the buffer is a finite set of model samples that is reused across many steps, so even at convergence it is only approximately $\pi$.
 
+\subsection{Refining the buffer: an exact i-SIR Gibbs step}
+\label{sec:refine}
+Anchoring leaves the buffer untouched, so it cannot repair buffer errors that the proposals do not see. We add an optional \emph{refinement} step that moves the buffer towards $\pi$ using only energy evaluations, and that leaves an exact buffer exact.
+Treat the buffer as $N$ chains $x^{1:N}$ and a block $S$ of them as the state to be updated, with the remaining chains $R$ held fixed as reference.
+For $x=x^i$, $i\in S$, draw a noise level $\sigma$ and apply two steps:
+(1)~\emph{noise}: $x_t=x+\sigma\varepsilon$, an exact draw from $\mathcal{N}(x_t\mid x,\sigma^2I)$;
+(2)~\emph{i-SIR resample}: draw $K$ proposals $y_k\sim q(\cdot\mid x_t,R)$, where $q$ is the mixture \eqref{eq:replay} built from the reference chains, and select $x'$ among $\{x,y_1,\dots,y_K\}$ with probability proportional to $\tilde\pi(y)\,\mathcal{N}(x_t;y,\sigma^2I)/q(y\mid x_t,R)$.
+Step~(2) is the conditional importance sampling kernel of \cref{sec:method} applied to the posterior $\pi_t(\cdot\mid x_t)$, with the current chain playing the role of the anchor. We call the pair a refinement sweep.
+
+\begin{proposition}[Invariance of refinement]
+\label{prop:refine}
+Let $\mathcal{P}_R$ be the kernel that updates every chain in $S$ independently by steps (1)--(2), given reference chains $R$. If $x^{S}\sim\pi^{\otimes|S|}$ then $\mathcal{P}_R$ maps $x^S$ to a sample of $\pi^{\otimes|S|}$, for every fixed $R$ and every $K\ge1$. Consequently, a sweep that visits all blocks in turn, each with a reference set made of chains from outside the block, leaves $\pi^{\otimes N}$ invariant.
+\end{proposition}
+
+\noindent The proof is in \cref{app:proofs} (it is the standard Gibbs-plus-i-SIR argument on the joint density $\pi(x)\mathcal{N}(x_t\mid x,\sigma^2I)$). Two features matter. The proposal depends on $R$ and $x_t$ but not on $x$, which is what makes step~(2) a valid i-SIR kernel. And the invariance is for the \emph{exact} buffer: a buffer that is not exact is not repaired in one step, and we prove no rate for it. Unlike anchoring, however, the step can change the relative weights of the modes the buffer contains, because the weights $\tilde\pi/q$ compare energies across modes.
+Refinement requires $K{+}1$ energy evaluations per buffer point and sweep, with no gradients. It is run once after each outer iteration, once anchoring has started (explore$\to$anchor), with noise levels log-uniform in $[\sigma_{\min},\sigma_{\mathrm{ref}}]$. Since $\sigma_{\mathrm{ref}}$ sets how far a refinement step can move a point, we take it at the within-mode scale of the target (\cref{app:exp}). The proposals are the replay mixture with $\alpha=0.5$.
+
 \begin{algorithm}[t]
 \caption{Anchored Energy Matching (AEM)}
 \label{alg:aem}
