@@ -1,0 +1,162 @@
+{
+ "walkers": {
+  "modes": 10,
+  "tv": 0.05099999999999999
+ },
+ "walker_evals": 402000,
+ "records": [
+  {
+   "config": "full_bufref",
+   "sweep": 0,
+   "modes": 4,
+   "tv": 0.6
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 1,
+   "rate": 0.71083984375,
+   "evals_per_sweep": 330000,
+   "time": 24.644629955291748,
+   "modes": 4,
+   "tv": 0.6
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 2,
+   "rate": 0.693359375,
+   "evals_per_sweep": 330000,
+   "time": 50.904057025909424,
+   "modes": 4,
+   "tv": 0.6000000000000001
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 5,
+   "rate": 0.68857421875,
+   "evals_per_sweep": 330000,
+   "time": 75.10977840423584,
+   "modes": 4,
+   "tv": 0.6000000000000001
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 10,
+   "rate": 0.6802734375,
+   "evals_per_sweep": 330000,
+   "time": 97.93653535842896,
+   "modes": 4,
+   "tv": 0.6000000000000001
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 20,
+   "rate": 0.684375,
+   "evals_per_sweep": 330000,
+   "time": 136.4167070388794,
+   "modes": 4,
+   "tv": 0.6000000000000001
+  },
+  {
+   "config": "full_walk",
+   "sweep": 0,
+   "modes": 4,
+   "tv": 0.6
+  },
+  {
+   "config": "full_walk",
+   "sweep": 1,
+   "rate": 0.6943359375,
+   "evals_per_sweep": 330000,
+   "time": 4.02044939994812,
+   "modes": 10,
+   "tv": 0.5775
+  },
+  {
+   "config": "full_walk",
+   "sweep": 2,
+   "rate": 0.68544921875,
+   "evals_per_sweep": 330000,
+   "time": 6.9719390869140625,
+   "modes": 10,
+   "tv": 0.5579000000000001
+  },
+  {
+   "config": "full_walk",
+   "sweep": 5,
+   "rate": 0.66455078125,
+   "evals_per_sweep": 330000,
+   "time": 18.361351013183594,
+   "modes": 10,
+   "tv": 0.4979
+  },
+  {
+   "config": "full_walk",
+   "sweep": 10,
+   "rate": 0.6728515625,
+   "evals_per_sweep": 330000,
+   "time": 36.303290128707886,
+   "modes": 10,
+   "tv": 0.4124
+  },
+  {
+   "config": "full_walk",
+   "sweep": 20,
+   "rate": 0.66416015625,
+   "evals_per_sweep": 330000,
+   "time": 67.80226349830627,
+   "modes": 10,
+   "tv": 0.2891
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 0,
+   "modes": 10,
+   "tv": 0.0068000000000000005
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 1,
+   "rate": 0.651171875,
+   "evals_per_sweep": 330000,
+   "time": 2.7380752563476562,
+   "modes": 10,
+   "tv": 0.0076999999999999985
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 2,
+   "rate": 0.64169921875,
+   "evals_per_sweep": 330000,
+   "time": 5.177347898483276,
+   "modes": 10,
+   "tv": 0.008100000000000003
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 5,
+   "rate": 0.64912109375,
+   "evals_per_sweep": 330000,
+   "time": 13.684166431427002,
+   "modes": 10,
+   "tv": 0.008999999999999987
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 10,
+   "rate": 0.6408203125,
+   "evals_per_sweep": 330000,
+   "time": 27.54475712776184,
+   "modes": 10,
+   "tv": 0.006299999999999993
+  },
+  {
+   "config": "full_walk_exactstart",
+   "sweep": 20,
+   "rate": 0.65419921875,
+   "evals_per_sweep": 330000,
+   "time": 55.867125511169434,
+   "modes": 10,
+   "tv": 0.011799999999999991
+  }
+ ]
+}
