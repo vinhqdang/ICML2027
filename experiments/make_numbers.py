@@ -61,7 +61,7 @@ d('r:mw_ew1_ratio_lo', fmt(min(mean('mw32', 'idem', 'energy_w1') / mean('mw32', 
 d('r:mw_ew1_ratio_hi', fmt(max(mean('mw32', 'idem', 'energy_w1') / mean('mw32', m, 'energy_w1') for m in S['mw32'] if m != 'idem'), 2))
 for t in ('gmm16', 'mw32', 'dw4', 'lj13'):
     for m in S[t]:
-        d(f'r:evals_over_idem:{t}:{m}', fmt(mean(t, m, 'n_energy_evals') / mean(t, 'idem', 'n_energy_evals'), 3))
+        d(f'r:evals_over_idem:{t}:{m}', fmt(mean(t, m, 'n_energy_evals') / mean(t, 'idem', 'n_energy_evals'), 4))
         d(f'r:gpu_hours:{t}:{m}', fmt(mean(t, m, 'wall_time') * S[t][m]['n'] / 3600, 2))
 tot = sum(S[t][m]['wall_time']['mean'] * S[t][m]['n'] for t in ('gmm16', 'mw32', 'dw4', 'lj13') for m in S[t])
 d('r:gpu_hours_total', fmt(tot / 3600, 2))

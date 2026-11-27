@@ -30,6 +30,6 @@ for run in sys.argv[2:]:
             pred = net.score(xt.float(), tt.float()).double()
         truth = t.noised_score(xt, sig)
         err = float(((pred - truth) ** 2).sum(-1).mean() / (truth ** 2).sum(-1).mean())
-        out.append(f'sigma={s}: {err:.3e}')
+        out.append(f'sigma={s}: {err:.6e}')
         rows.append((os.path.basename(run), s, err))
     print('  '.join(out))
