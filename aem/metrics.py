@@ -33,6 +33,8 @@ def energy_w1(ex, ey):
     ex, ey = _np(ex).ravel(), _np(ey).ravel()
     ex, ey = ex[np.isfinite(ex)], ey[np.isfinite(ey)]
     ex, ey = np.clip(ex, -1e8, 1e8), np.clip(ey, -1e8, 1e8)
+    if len(ex) == 0 or len(ey) == 0:
+        return float('nan')
     return float(wasserstein_distance(ex, ey))
 
 

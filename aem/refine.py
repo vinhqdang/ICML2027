@@ -64,10 +64,12 @@ def refine_buffer(target, buf, n_sweeps=1, block=256, K=64, alpha=0.5, tau_max=1
         for s in range(0, N, block):
             idx = perm[s:s + block]
             rest = torch.cat([perm[:s], perm[s + block:]])
+            if rest.numel() == 0:  # buffer smaller than one block: skip (no reference chains)
+                continue
             ref = buf[rest[torch.randperm(rest.numel(), generator=generator)[:512]]]
             u = torch.rand(idx.numel(), generator=generator, dtype=buf.dtype)
             sig = sigma_min * (sigma_max / sigma_min) ** u
             buf[idx], r = refine_block(target, buf[idx], ref, sig, K=K, alpha=alpha, tau_max=tau_max,
                                        generator=generator)
             rates.append(r)
-    return buf, sum(rates) / len(rates)
+    return buf, (sum(rates) / len(rates) if rates else 0.0)
