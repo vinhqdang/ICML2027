@@ -1,0 +1,6 @@
+raw evals=0 {'w2': 10.846, 'energy_w1': 560.948, 'mmd': 0.18, 'pattern_tv': 0.557} DW+ 0.501 Gvar 3.981
+sweep1 evals=3.2e+05 {'w2': 9.264, 'energy_w1': 252.636, 'mmd': 0.135, 'pattern_tv': 0.474} DW+ 0.553 Gvar 2.512
+sweep2 evals=6.4e+05 {'w2': 8.233, 'energy_w1': 109.141, 'mmd': 0.096, 'pattern_tv': 0.391} DW+ 0.605 Gvar 1.759
+sweep5 evals=1.6e+06 {'w2': 6.653, 'energy_w1': 11.729, 'mmd': 0.028, 'pattern_tv': 0.226} DW+ 0.724 Gvar 1.101
+sweep10 evals=3.2e+06 {'w2': 5.95, 'energy_w1': 1.476, 'mmd': 0.004, 'pattern_tv': 0.087} DW+ 0.802 Gvar 1.004
+sweep20 evals=6.4e+06 {'w2': 5.757, 'energy_w1': 0.157, 'mmd': 0.0, 'pattern_tv': 0.038} DW+ 0.838 Gvar 0.995

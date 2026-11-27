@@ -67,3 +67,14 @@ including among modes found only by the walkers.
 Per outer iteration: refine sweeps x N_buffer x (K_refine + 1) energies, plus W x (levels + 1) energy+gradient
 evaluations for the walkers. Default (2 sweeps, N=10^4, K=32, W=2000, 200 levels): 0.66M + 0.40M = 1.06M, against
 2.56M for the training targets (256 x 100 x 100), i.e. +41%. We compare with iDEM at matched energy budget.
+
+## Post-hoc correction and a separability caveat (MW-32)
+Twenty sweeps of the pi-invariant single-coordinate i-SIR refinement (K=4, 32 block updates per chain per sweep,
+6.4M energy evaluations for 2000 samples) bring ANY starting population to the target on MW-32:
+- from XR samples: major-well fraction 0.846, pattern TV 0.029, energy W1 0.16;
+- from iDEM samples: 0.848, 0.048, 0.21;
+- from N(0, 4I) noise (no network at all): 0.838, 0.038, 0.157.
+(Logs in results/explore/posthoc/.) MW-32 is a product of independent 1-D targets, so coordinate-wise population MCMC
+is close to an ideal sampler for it, at about 2% of the energy budget of diffusion-sampler training (~290M). On MW-32
+the gains of XR therefore come from exploiting separability, not from the learned sampler. Claims on mode weights need
+non-separable targets.
