@@ -15,9 +15,10 @@ METH = {
     'idem': '--method idem',
     'aemwarmref': '--method aem --anchor_warmup 30 --refine 1',  # explore -> anchor + whole-vector refinement
     'xr': XR + ' --sub_blocks 32 --sub_K 4 --sub_bmax 1',        # anchored from the start + XR
-    'xr_global': XR,                                             # ablation: no coordinate-block sweep
+    'xr_lite': XR.replace('--explore_walkers 2000', '--explore_walkers 500') + ' --sub_blocks 8 --sub_K 4 --sub_bmax 1',
+    'xr_heavy': XR + ' --sub_blocks 96 --sub_K 4 --sub_bmax 1',  # 3x the coordinate updates
     'xr_nowalk': XR.replace('--explore_walkers 2000', '--explore_walkers 0') + ' --sub_blocks 32 --sub_K 4 --sub_bmax 1',
-    'idem_matched': '--method idem --n_inner 170',               # iDEM at roughly XR's energy budget (MW-32)
+    'idem_matched': '--method idem --n_inner 192',               # iDEM at XR's energy budget (~295M evals)
 }
 for t, targs in TGT.items():
     for m, margs in METH.items():
