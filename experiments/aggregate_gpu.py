@@ -20,15 +20,22 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 BASE = os.path.join(ROOT, 'results', 'main_gpu')
-FINAL = {'gmm16': 80, 'mw32': 80, 'dw4': 40, 'lj13': 40}
+FINAL = {'gmm16': 80, 'mw32': 80, 'dw4': 40, 'lj13': 30, 'oracle_dw4': 40, 'oracle_lj13': 30}
 TGT_NAME = {'gmm16': 'GMM-10 ($d{=}16$)', 'mw32': 'MW-32 ($d{=}32$)', 'dw4': 'DW-4 ($d{=}8$)', 'lj13': 'LJ-13 ($d{=}39$)'}
 METH_NAME = {'idem': 'iDEM', 'aem_cold': 'AEM (cold)', 'aem_ea': 'AEM (explore$\\to$anchor)',
-             'aem_ea_refine': 'AEM (explore$\\to$anchor) + refine'}
+             'aem_ea_refine': 'AEM (explore$\\to$anchor) + refine', 'aem': 'AEM'}
 METRICS = {'gmm16': ['w2', 'energy_w1', 'mmd', 'mode_tv', 'within_var'],
            'mw32': ['w2', 'energy_w1', 'mmd', 'pattern_tv', 'within_var'],
-           'dw4': ['w2', 'energy_w1', 'dist_w1', 'mmd'], 'lj13': ['w2', 'energy_w1', 'dist_w1', 'mmd']}
+           'dw4': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac', 'w2', 'mmd'],
+           'lj13': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac', 'w2', 'mmd']}
+METRICS['oracle_dw4'] = METRICS['dw4']
+METRICS['oracle_lj13'] = METRICS['lj13']
+TGT_NAME['oracle_dw4'] = 'DW-4, oracle buffer'
+TGT_NAME['oracle_lj13'] = 'LJ-13, oracle buffer'
+TABLE_METRICS = {'oracle_dw4': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac'], 'oracle_lj13': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac'], 'dw4': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac'], 'lj13': ['energy_w1', 'energy_w1_trim', 'dist_w1', 'bad_frac']}
 MNAME = {'w2': '$\\mathcal{W}_2$', 'energy_w1': '$\\mathcal{E}$-$\\mathcal{W}_1$', 'mmd': 'MMD', 'mode_tv': 'mode TV',
-         'pattern_tv': 'mode TV', 'within_var': 'var.\\ ratio', 'major_well': 'major well', 'dist_w1': '$d$-$\\mathcal{W}_1$'}
+         'pattern_tv': 'mode TV', 'within_var': 'var.\\ ratio', 'major_well': 'major well', 'dist_w1': '$d$-$\\mathcal{W}_1$',
+         'energy_w1_trim': '$\\mathcal{E}$-$\\mathcal{W}_1^{\\mathrm{tr}}$', 'bad_frac': 'frac.\\ high-$\\mathcal{E}$'}
 TRUE_MAJOR_WELL = None  # computed from exact samples
 _T = {}
 
@@ -45,7 +52,22 @@ def extra_stats(tgt, run_dir):
     import torch
     out = {}
     f = os.path.join(run_dir, 'samples.npy')
-    if tgt not in ('gmm16', 'mw32') or not os.path.exists(f):
+    if not os.path.exists(f):
+        return out
+    tgt = tgt.replace('oracle_', '')
+    if tgt in ('dw4', 'lj13'):  # robust energy statistics: samples with energy above the 99.9% quantile of the reference
+        from scipy.stats import wasserstein_distance
+        t = target(tgt)
+        er = t.energy(t.sample(100000, seed=1)).numpy()
+        thr = float(np.quantile(er, 0.999))
+        x = np.load(f)
+        x = x[np.isfinite(x).all(1)]
+        em = t.energy(torch.tensor(x, dtype=torch.float64)).numpy()
+        bad = em > thr
+        out['bad_frac'] = float(bad.mean())
+        out['energy_w1_trim'] = float(wasserstein_distance(em[~bad], er)) if (~bad).any() else float('nan')
+        return out
+    if tgt not in ('gmm16', 'mw32'):
         return out
     x = np.load(f)
     x = x[np.isfinite(x).all(1)]
@@ -93,7 +115,7 @@ def table(summary, targets, fname):
     for t in targets:
         if t not in summary:
             continue
-        ms = METRICS[t]
+        ms = TABLE_METRICS.get(t, METRICS[t])
         lines.append(f'\\multicolumn{{{len(ms) + 1}}}{{l}}{{\\textbf{{{TGT_NAME[t]}}}}}\\\\')
         best = {}
         for m in ms:
@@ -149,6 +171,7 @@ if __name__ == '__main__':
     json.dump(summary, open(os.path.join(BASE, 'summary.json'), 'w'), indent=1)
     table(summary, ['gmm16', 'mw32'], 'tab_gpu_free.tex')
     table(summary, ['dw4', 'lj13'], 'tab_gpu_mol.tex')
+    table(summary, ['oracle_dw4', 'oracle_lj13'], 'tab_gpu_oracle.tex')
     curves(runs, [t for t in ['gmm16', 'mw32', 'dw4', 'lj13'] if any(k[0] == t for k in runs)])
     for t in summary:
         if isinstance(summary[t], dict) and 'seeds' not in summary[t]:
