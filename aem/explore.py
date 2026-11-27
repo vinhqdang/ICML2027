@@ -96,10 +96,10 @@ def refine_subspace_block(target, x, ref, sigma, mask, K=32, alpha=0.5, tau_max=
 @torch.no_grad()
 def refine_buffer_explore(target, buf, explore_ref=None, n_sweeps=1, block=256, K=32, alpha=0.5, tau_max=1.0,
                           sigma_min=0.01, sigma_max=1.0, b_max=None, p_full=0.25, explore_frac=0.5, n_ref=512,
-                          generator=None):
+                          n_blocks=1, scale_sigma=True, generator=None):
     """n_sweeps sweeps of subspace i-SIR updates over the whole buffer. For each block of chains the reference set is
     a random subset of the OTHER chains, mixed with points of `explore_ref` (an independent exploration population)
-    in proportion explore_frac. Noise levels log-uniform in [sigma_min, sigma_max]. Returns (buffer, move rate,
+    in proportion explore_frac. Each chain gets n_blocks block updates per sweep. Noise levels log-uniform in [sigma_min, sigma_max]. Returns (buffer, move rate,
     number of energy evaluations)."""
     buf = buf.clone()
     N, d = buf.shape
@@ -118,13 +118,17 @@ def refine_buffer_explore(target, buf, explore_ref=None, n_sweeps=1, block=256, 
             if not refs:
                 continue
             ref = torch.cat(refs).to(buf.dtype)
-            u = torch.rand(idx.numel(), generator=generator, dtype=buf.dtype)
-            sig = sigma_min * (sigma_max / sigma_min) ** u
-            mask = random_masks(idx.numel(), d, b_max=b_max, p_full=p_full, generator=generator, dtype=buf.dtype)
-            buf[idx], r = refine_subspace_block(target, buf[idx], ref, sig, mask, K=K, alpha=alpha, tau_max=tau_max,
-                                                generator=generator)
-            rates.append(r)
-            n_e += idx.numel() * (K + 1)
+            xb = buf[idx]
+            for _b in range(n_blocks):  # n_blocks successive block updates of the same chains (fresh S, sigma)
+                mask = random_masks(idx.numel(), d, b_max=b_max, p_full=p_full, generator=generator, dtype=buf.dtype)
+                u = torch.rand(idx.numel(), generator=generator, dtype=buf.dtype)
+                smax = sigma_max * (torch.sqrt(d / mask.sum(1)) if scale_sigma else torch.ones_like(u))
+                sig = sigma_min * (smax / sigma_min) ** u  # block noise scaled so that sigma^2 |S| <= sigma_max^2 d
+                xb, r = refine_subspace_block(target, xb, ref, sig, mask, K=K, alpha=alpha, tau_max=tau_max,
+                                              generator=generator)
+                rates.append(r)
+                n_e += idx.numel() * (K + 1)
+            buf[idx] = xb
     return buf, (sum(rates) / len(rates) if rates else 0.0), n_e
 
 

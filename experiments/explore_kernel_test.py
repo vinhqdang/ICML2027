@@ -38,8 +38,9 @@ if which == 'mw':
     flip = (xe < 0) & (torch.rand(xe.shape, generator=g) < 0.85)
     xe[flip] = -xe[flip]
     bad[:, 0::2] = xe
-    configs = {'full_bufref': dict(p_full=1.0), 'sub_bufref': dict(p_full=0.0, b_max=4),
-               'sub_walk': dict(p_full=0.0, b_max=4, walk=True), 'sub_walk_exactstart': dict(p_full=0.0, b_max=4, walk=True, start='exact')}
+    configs = {'full_bufref': dict(p_full=1.0), 'coord_bufref': dict(p_full=0.0, b_max=1, K=4, nb=32),
+               'coord_walk': dict(p_full=0.0, b_max=1, K=4, nb=32, walk=True),
+               'coord_walk_exactstart': dict(p_full=0.0, b_max=1, K=4, nb=32, walk=True, start='exact')}
 else:
     t = get_target('gmm_d', dim=16); stats = gmm_stats
     smin, smax, _ = DEFAULTS['gmm_d']
@@ -48,8 +49,9 @@ else:
     bad = exact[keep][:10000]
     bad = bad[torch.randint(bad.shape[0], (10000,), generator=g)]
     configs = {'full_bufref': dict(p_full=1.0), 'full_walk': dict(p_full=1.0, walk=True),
-               'mix_walk': dict(p_full=0.5, b_max=16, walk=True), 'mix_walk_exactstart': dict(p_full=0.5, b_max=16, walk=True, start='exact')}
+               'full_walk_exactstart': dict(p_full=1.0, walk=True, start='exact')}
 
+n_sw = int(sys.argv[3]) if len(sys.argv) > 3 else 20
 walk, logw, n_walk = annealed_walkers(t, 2000, smax, n_levels=200, generator=g, return_logw=True)
 print('walkers', stats(t, walk), 'evals', n_walk, flush=True)
 for name, c in configs.items():
@@ -57,11 +59,11 @@ for name, c in configs.items():
     rec = {'config': name, 'sweep': 0, **stats(t, buf)}
     print(rec, flush=True); out.append(rec)
     t0 = time.time()
-    for sw in range(1, 21):
-        buf, rate, ne = refine_buffer_explore(t, buf, walk if c.get('walk') else None, n_sweeps=1, K=32,
+    for sw in range(1, n_sw + 1):
+        buf, rate, ne = refine_buffer_explore(t, buf, walk if c.get('walk') else None, n_sweeps=1, K=c.get('K', 32), n_blocks=c.get('nb', 1),
                                               tau_max=0.5 if which == 'mw' else 1.0, sigma_min=smin, sigma_max=smax,
                                               b_max=c.get('b_max'), p_full=c['p_full'], generator=g)
-        if sw in (1, 2, 5, 10, 20):
+        if sw in (1, 2, 5, 10, 20, 40):
             rec = {'config': name, 'sweep': sw, 'rate': rate, 'evals_per_sweep': ne, 'time': time.time() - t0,
                    **stats(t, buf)}
             print(rec, flush=True); out.append(rec)

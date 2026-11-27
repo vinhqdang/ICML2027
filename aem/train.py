@@ -38,9 +38,11 @@ class TrainConfig:
     refine_K: int = 64
     refine_start: int = -1  # first outer iteration with refinement; -1: same as anchor_warmup + 1
     refine_sigma_max: Optional[float] = None  # None: sigma_max of the target
-    refine_mode: str = 'full'  # 'full': aem.refine (whole-vector moves); 'subspace': aem.explore subspace i-SIR moves
-    sub_p_full: float = 0.25  # subspace mode: probability of a whole-vector block
-    sub_bmax: int = 0  # subspace mode: max block size (0: dim)
+    refine_mode: str = 'full'  # 'full': aem.refine; 'subspace': aem.explore (whole-vector sweeps with walker
+    #                            references, then coordinate-block sweeps)
+    sub_blocks: int = 0  # subspace mode: block updates per chain in the local sweep (0: no local sweep)
+    sub_bmax: int = 1  # subspace mode: max block size of the local sweep
+    sub_K: int = 4  # subspace mode: proposals per local block update
     explore_walkers: int = 0  # >0: annealed-MALA exploration walkers per outer iteration, used as i-SIR references
     explore_levels: int = 200  # annealing levels (one MALA step each) per walker
     explore_frac: float = 0.5  # fraction of the reference set taken from the walkers
@@ -74,7 +76,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'refine', 'sub_bmax', 'explore_walkers', 'explore_levels', 'explore_every', 'refine_K', 'refine_start', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'refine', 'sub_blocks', 'sub_K', 'sub_bmax', 'explore_walkers', 'explore_levels', 'explore_every', 'refine_K', 'refine_start', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -206,12 +208,15 @@ def train(cfg=None, **overrides):
                     walkers, n_w = annealed_walkers(target, cfg.explore_walkers, smax, n_levels=cfg.explore_levels,
                                                     generator=gen, dtype=buf.dtype)
                     n_evals += n_w
+                kw = dict(alpha=cfg.alpha, tau_max=cfg.tau_max, sigma_min=smin, sigma_max=cfg.refine_sigma_max or smax,
+                          explore_frac=cfg.explore_frac, generator=gen)
                 buf, _, n_r = refine_buffer_explore(target, buf, walkers, n_sweeps=cfg.refine, K=cfg.refine_K,
-                                                    alpha=cfg.alpha, tau_max=cfg.tau_max, sigma_min=smin,
-                                                    sigma_max=cfg.refine_sigma_max or smax, b_max=cfg.sub_bmax,
-                                                    p_full=cfg.sub_p_full, explore_frac=cfg.explore_frac,
-                                                    generator=gen)
+                                                    p_full=1.0, **kw)
                 n_evals += n_r
+                if cfg.sub_blocks > 0:
+                    buf, _, n_r = refine_buffer_explore(target, buf, walkers, n_sweeps=1, K=cfg.sub_K, p_full=0.0,
+                                                        b_max=cfg.sub_bmax, n_blocks=cfg.sub_blocks, **kw)
+                    n_evals += n_r
             elif cfg.refine > 0 and it >= r_start:
                 buf, _ = refine_buffer(target, buf, n_sweeps=cfg.refine, K=cfg.refine_K, alpha=cfg.alpha,
                                        tau_max=cfg.tau_max, sigma_min=smin,

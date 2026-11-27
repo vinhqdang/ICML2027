@@ -1,0 +1,213 @@
+{
+ "walkers": {
+  "major": 0.535281240940094,
+  "gvar": 1.7906709909439087
+ },
+ "walker_evals": 402000,
+ "records": [
+  {
+   "config": "full_bufref",
+   "sweep": 0,
+   "major": 0.9765625,
+   "gvar": 0.9967948794364929
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 1,
+   "rate": 0.3986328125,
+   "evals_per_sweep": 330000,
+   "time": 3.2118396759033203,
+   "major": 0.9765625,
+   "gvar": 0.996574878692627
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 2,
+   "rate": 0.3935546875,
+   "evals_per_sweep": 330000,
+   "time": 6.605385065078735,
+   "major": 0.9765562415122986,
+   "gvar": 0.996762216091156
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 5,
+   "rate": 0.41298828125,
+   "evals_per_sweep": 330000,
+   "time": 16.674309492111206,
+   "major": 0.9765625,
+   "gvar": 0.9966355562210083
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 10,
+   "rate": 0.39599609375,
+   "evals_per_sweep": 330000,
+   "time": 31.714338064193726,
+   "major": 0.9765437245368958,
+   "gvar": 0.9956400394439697
+  },
+  {
+   "config": "full_bufref",
+   "sweep": 20,
+   "rate": 0.38525390625,
+   "evals_per_sweep": 330000,
+   "time": 61.02408790588379,
+   "major": 0.9765437245368958,
+   "gvar": 0.9953532814979553
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 0,
+   "major": 0.9765625,
+   "gvar": 0.9967948794364929
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 1,
+   "rate": 0.92783203125,
+   "evals_per_sweep": 330000,
+   "time": 2.42665958404541,
+   "major": 0.9758562445640564,
+   "gvar": 0.9965379238128662
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 2,
+   "rate": 0.9248046875,
+   "evals_per_sweep": 330000,
+   "time": 4.730634450912476,
+   "major": 0.9751187562942505,
+   "gvar": 0.9963908195495605
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 5,
+   "rate": 0.933984375,
+   "evals_per_sweep": 330000,
+   "time": 12.386250734329224,
+   "major": 0.9731125235557556,
+   "gvar": 0.9962641000747681
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 10,
+   "rate": 0.9333984375,
+   "evals_per_sweep": 330000,
+   "time": 25.305591821670532,
+   "major": 0.9699500203132629,
+   "gvar": 0.9980977773666382
+  },
+  {
+   "config": "sub_bufref",
+   "sweep": 20,
+   "rate": 0.9302734375,
+   "evals_per_sweep": 330000,
+   "time": 50.44851040840149,
+   "major": 0.9636187553405762,
+   "gvar": 0.9984204769134521
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 0,
+   "major": 0.9765625,
+   "gvar": 0.9967948794364929
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 1,
+   "rate": 0.92880859375,
+   "evals_per_sweep": 330000,
+   "time": 2.7685177326202393,
+   "major": 0.9758625030517578,
+   "gvar": 0.9969499111175537
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 2,
+   "rate": 0.926953125,
+   "evals_per_sweep": 330000,
+   "time": 5.573899507522583,
+   "major": 0.9750062227249146,
+   "gvar": 0.9963411092758179
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 5,
+   "rate": 0.929296875,
+   "evals_per_sweep": 330000,
+   "time": 14.133831024169922,
+   "major": 0.9728500247001648,
+   "gvar": 0.9958402514457703
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 10,
+   "rate": 0.93056640625,
+   "evals_per_sweep": 330000,
+   "time": 28.151548147201538,
+   "major": 0.9692062735557556,
+   "gvar": 0.999396800994873
+  },
+  {
+   "config": "sub_walk",
+   "sweep": 20,
+   "rate": 0.9255859375,
+   "evals_per_sweep": 330000,
+   "time": 58.29263091087341,
+   "major": 0.9621312618255615,
+   "gvar": 0.9965923428535461
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 0,
+   "major": 0.844531238079071,
+   "gvar": 0.9967948794364929
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 1,
+   "rate": 0.92138671875,
+   "evals_per_sweep": 330000,
+   "time": 3.2240138053894043,
+   "major": 0.8445937633514404,
+   "gvar": 0.9968531727790833
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 2,
+   "rate": 0.9259765625,
+   "evals_per_sweep": 330000,
+   "time": 5.906145334243774,
+   "major": 0.8446750044822693,
+   "gvar": 0.9967090487480164
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 5,
+   "rate": 0.92587890625,
+   "evals_per_sweep": 330000,
+   "time": 14.29280710220337,
+   "major": 0.8446999788284302,
+   "gvar": 0.9976319670677185
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 10,
+   "rate": 0.9251953125,
+   "evals_per_sweep": 330000,
+   "time": 28.638184070587158,
+   "major": 0.844587504863739,
+   "gvar": 0.999087929725647
+  },
+  {
+   "config": "sub_walk_exactstart",
+   "sweep": 20,
+   "rate": 0.92646484375,
+   "evals_per_sweep": 330000,
+   "time": 57.59239172935486,
+   "major": 0.8439187407493591,
+   "gvar": 0.9971699118614197
+  }
+ ]
+}
