@@ -16,6 +16,7 @@ import torch
 
 from .estimators import score_estimate
 from .replay import score_estimate_replay
+from .refine import refine_buffer
 from .metrics import compute_all
 from .model import ScoreNet
 from .sampler import sample_model
@@ -33,6 +34,9 @@ class TrainConfig:
     K: int = 100
     n_isir: int = 1
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
+    refine: int = 0  # number of exact i-SIR Gibbs sweeps applied to the buffer after each outer iteration
+    refine_K: int = 64
+    refine_sigma_max: Optional[float] = None  # None: sigma_max of the target
     no_replace: int = 0  # 1: sample minibatch rows without replacement
     oracle: int = 0  # 1: fixed buffer of exact target samples, no sampler loop (tests the fixed point directly)
     replay: int = 0  # 1: add replay (buffer-KDE) proposals, leave-one-out over the minibatch
@@ -60,7 +64,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'refine', 'refine_K', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -174,6 +178,11 @@ def train(cfg=None, **overrides):
             if not cfg.oracle:
                 new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
                 buf = torch.cat([buf, new])[-cfg.buffer_size:]
+            if cfg.refine > 0:
+                buf, _ = refine_buffer(target, buf, n_sweeps=cfg.refine, K=cfg.refine_K, alpha=cfg.alpha,
+                                       tau_max=cfg.tau_max, sigma_min=smin,
+                                       sigma_max=cfg.refine_sigma_max or smax, generator=gen)
+                n_evals += cfg.refine * buf.shape[0] * (cfg.refine_K + 1)
 
             if it % cfg.eval_every == 0 or it == cfg.n_outer:
                 net.eval()
