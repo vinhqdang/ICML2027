@@ -36,6 +36,7 @@ class TrainConfig:
     clip: Optional[float] = None  # None: default for the target; 0: no clipping
     refine: int = 0  # number of exact i-SIR Gibbs sweeps applied to the buffer after each outer iteration
     refine_K: int = 64
+    refine_start: int = -1  # first outer iteration with refinement; -1: same as anchor_warmup + 1
     refine_sigma_max: Optional[float] = None  # None: sigma_max of the target
     no_replace: int = 0  # 1: sample minibatch rows without replacement
     oracle: int = 0  # 1: fixed buffer of exact target samples, no sampler loop (tests the fixed point directly)
@@ -65,7 +66,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'refine', 'refine_K', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'refine', 'refine_K', 'refine_start', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -180,7 +181,8 @@ def train(cfg=None, **overrides):
             if not cfg.oracle:
                 new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
                 buf = torch.cat([buf, new])[-cfg.buffer_size:]
-            if cfg.refine > 0:
+            r_start = cfg.refine_start if cfg.refine_start >= 0 else cfg.anchor_warmup + 1
+            if cfg.refine > 0 and it >= r_start:
                 buf, _ = refine_buffer(target, buf, n_sweeps=cfg.refine, K=cfg.refine_K, alpha=cfg.alpha,
                                        tau_max=cfg.tau_max, sigma_min=smin,
                                        sigma_max=cfg.refine_sigma_max or smax, generator=gen)
