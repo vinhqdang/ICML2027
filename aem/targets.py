@@ -36,7 +36,7 @@ def _gen(seed=None, generator=None):
         return generator
     if seed is None:
         return None
-    g = torch.Generator()
+    g = torch.Generator(device=torch.get_default_device())
     g.manual_seed(int(seed))
     return g
 
@@ -133,7 +133,7 @@ class GMM40(GMM):
     def __init__(self):
         g = torch.Generator()
         g.manual_seed(0)
-        means = torch.rand(40, 2, generator=g, dtype=torch.float64) * 80.0 - 40.0
+        means = (torch.rand(40, 2, generator=g, dtype=torch.float64, device='cpu') * 80.0 - 40.0).to(torch.get_default_device())
         super().__init__(means, std=1.0)
 
 
@@ -143,7 +143,7 @@ class GMMd(GMM):
     def __init__(self, dim=10, n_comp=10, scale=10.0, seed=0):
         g = torch.Generator()
         g.manual_seed(int(seed))
-        means = (torch.rand(n_comp, dim, generator=g, dtype=torch.float64) * 2.0 - 1.0) * scale
+        means = ((torch.rand(n_comp, dim, generator=g, dtype=torch.float64, device='cpu') * 2.0 - 1.0) * scale).to(torch.get_default_device())
         super().__init__(means, std=1.0)
         self.plot_bounds = (-1.5 * scale, 1.5 * scale)
 

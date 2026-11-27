@@ -44,6 +44,7 @@ class TrainConfig:
     tau_max: float = 1.0  # max KDE bandwidth; tau = min(sigma, tau_max)
     anchor_warmup: int = 0  # outer iterations with plain (unanchored) SNIS targets before anchoring
     anchor_ramp: int = 0  # then linearly ramp the anchor-use probability from 0 to 1 over this many iterations
+    device: str = 'cpu'
     out_clip: Optional[float] = None  # cap on ||sigma*s|| for targets and sampling; None: 10*sqrt(d); 0: off
     sigma_min: Optional[float] = None  # None: default for the target
     sigma_max: Optional[float] = None
@@ -96,8 +97,9 @@ def train(cfg=None, **overrides):
     clip = d_clip if cfg.clip is None else (cfg.clip or None)
     log_ratio = math.log(smax / smin)
 
+    torch.set_default_device(cfg.device)
     torch.manual_seed(cfg.seed)
-    gen = torch.Generator()
+    gen = torch.Generator(device=torch.get_default_device())
     gen.manual_seed(cfg.seed)
     target = get_target(cfg.target, **({} if cfg.dim is None else {'dim': cfg.dim}))
     d = target.dim
@@ -105,7 +107,7 @@ def train(cfg=None, **overrides):
 
     net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb, sigma_min=smin, sigma_max=smax)
     opt = torch.optim.Adam(net.parameters(), lr=cfg.lr)
-    ref = target.sample(cfg.n_eval, seed=REF_SEED).numpy()
+    ref = target.sample(cfg.n_eval, seed=REF_SEED).cpu().numpy()
 
     os.makedirs(cfg.out_dir, exist_ok=True)
     with open(os.path.join(cfg.out_dir, 'config.json'), 'w') as f:
@@ -186,9 +188,9 @@ def train(cfg=None, **overrides):
 
             if it % cfg.eval_every == 0 or it == cfg.n_outer:
                 net.eval()
-                eval_gen = torch.Generator()
+                eval_gen = torch.Generator(device=torch.get_default_device())
                 eval_gen.manual_seed(cfg.seed + 1)
-                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen, score_clip=oc).numpy()
+                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen, score_clip=oc).cpu().numpy()
                 metrics = compute_all(target, last_samples, ref)
                 rec = {'iter': it, 'wall_time': time.time() - t0, 'n_energy_evals': n_evals,
                        'loss': float(np.mean(losses)), 'buffer_size': int(buf.shape[0]), **metrics}

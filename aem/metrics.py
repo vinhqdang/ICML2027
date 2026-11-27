@@ -75,8 +75,8 @@ def compute_all(target, samples, ref):
     xs = torch.as_tensor(_np(samples))
     xr = torch.as_tensor(_np(ref))
     with torch.no_grad():
-        es = target.energy(xs).numpy()
-        er = target.energy(xr).numpy()
+        es = target.energy(xs).cpu().numpy()
+        er = target.energy(xr).cpu().numpy()
     out = {
         'w2': w2(xs, xr),
         'energy_w1': energy_w1(es, er),
@@ -84,14 +84,14 @@ def compute_all(target, samples, ref):
     }
     if hasattr(target, 'mode_assign'):
         with torch.no_grad():
-            a = target.mode_assign(xs).numpy()
+            a = target.mode_assign(xs).cpu().numpy()
         cov, tv = _mode_metrics(a, target.n_comp)
         out['mode_coverage'] = cov
         out['mode_tv'] = tv
     if hasattr(target, 'mode_signs'):
         with torch.no_grad():
-            cs = _pattern_codes(target.mode_signs(xs).numpy())
-            cr = _pattern_codes(target.mode_signs(xr).numpy())
+            cs = _pattern_codes(target.mode_signs(xs).cpu().numpy())
+            cr = _pattern_codes(target.mode_signs(xr).cpu().numpy())
         ps = np.bincount(cs, minlength=16) / len(cs)
         pr = np.bincount(cr, minlength=16) / len(cr)
         out['pattern_tv'] = 0.5 * float(np.abs(ps - pr).sum())
