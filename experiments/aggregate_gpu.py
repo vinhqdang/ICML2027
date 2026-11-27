@@ -65,6 +65,8 @@ def load():
     for p in sorted(glob.glob(os.path.join(BASE, '*', '*', 'seed*', 'log.jsonl'))):
         parts = p.split(os.sep)
         tgt, meth, seed = parts[-4], parts[-3], int(parts[-2][4:])
+        if tgt not in FINAL:
+            continue
         recs = [json.loads(l) for l in open(p) if l.strip()]
         if not recs or recs[-1]['iter'] != FINAL[tgt]:
             continue  # unfinished
