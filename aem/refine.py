@@ -14,6 +14,7 @@ import torch
 
 from .estimators import _energy
 from .replay import _log_normal
+from .targets import effective_dim
 
 
 @torch.no_grad()
@@ -21,25 +22,26 @@ def refine_block(target, x, ref, sigma, K=64, alpha=0.5, tau_max=1.0, generator=
     """One i-SIR Gibbs update of the chains x [B,d] using reference chains ref [R,d] (disjoint from x).
     sigma: [B] noise levels. Returns (new x [B,d], fraction of chains that moved)."""
     B, d = x.shape
+    d_eff = effective_dim(target)
     sig = sigma.reshape(B, 1).to(x.dtype)
     s2 = sig[:, 0] ** 2
     tau = torch.clamp(sig[:, 0], max=tau_max)
     t2 = tau ** 2
-    x_t = x + sig * torch.randn(B, d, generator=generator, dtype=x.dtype)
+    x_t = x + sig * target.project(torch.randn(B, d, generator=generator, dtype=x.dtype))
     logr = -0.5 * torch.cdist(x_t, ref) ** 2 / (s2 + t2)[:, None]
     logr = logr - torch.logsumexp(logr, 1, keepdim=True)
     comp_g = torch.rand(B, K, generator=generator, dtype=x.dtype) < alpha
     j = torch.multinomial(logr.exp(), K, replacement=True, generator=generator)
-    eps = torch.randn(B, K, d, generator=generator, dtype=x.dtype)
+    eps = target.project(torch.randn(B, K, d, generator=generator, dtype=x.dtype))
     props = torch.where(comp_g[..., None], x_t[:, None, :] + sig[:, :, None] * eps, ref[j] + tau[:, None, None] * eps)
     parts = torch.cat([x[:, None, :], props], 1)
-    log_qg = math.log(alpha) + _log_normal(parts, x_t[:, None, :], s2[:, None]) if alpha > 0 else None
+    log_qg = math.log(alpha) + _log_normal(parts, x_t[:, None, :], s2[:, None], d_eff) if alpha > 0 else None
     dy = torch.cdist(parts, ref.unsqueeze(0).expand(B, -1, -1)) ** 2
-    log_k = logr[:, None, :] - 0.5 * dy / t2[:, None, None] - 0.5 * d * torch.log(2 * math.pi * t2)[:, None, None]
+    log_k = logr[:, None, :] - 0.5 * dy / t2[:, None, None] - 0.5 * d_eff * torch.log(2 * math.pi * t2)[:, None, None]
     log_qr = math.log(1 - alpha) + torch.logsumexp(log_k, -1) if alpha < 1 else None
     log_q = log_qr if log_qg is None else (log_qg if log_qr is None else torch.logaddexp(log_qg, log_qr))
     E, _ = _energy(target, parts, need_grad=False)
-    logw = -E + _log_normal(parts, x_t[:, None, :], s2[:, None]) - log_q
+    logw = -E + _log_normal(parts, x_t[:, None, :], s2[:, None], d_eff) - log_q
     logw = torch.where(torch.isfinite(logw), logw, torch.full_like(logw, -float('inf')))
     w = torch.softmax(logw, 1)
     w = torch.nan_to_num(w, nan=0.0)

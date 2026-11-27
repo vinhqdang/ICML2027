@@ -12,16 +12,19 @@ import math
 import torch
 
 from .estimators import _energy
+from .targets import effective_dim
 
 
-def _log_normal(y, mean, var):
-    """log N(y; mean, var I). y: [B,P,d], mean: [B,1,d] or broadcastable, var: [B,1]."""
-    d = y.shape[-1]
+def _log_normal(y, mean, var, d=None):
+    """log N(y; mean, var I) on a d-dimensional space (d defaults to the last axis of y).
+    For projected (zero-centre-of-mass) Gaussians pass d = effective_dim(target). y: [B,P,d], var: [B,1]."""
+    d = y.shape[-1] if d is None else d
     return -0.5 * ((y - mean) ** 2).sum(-1) / var - 0.5 * d * torch.log(2 * math.pi * var)
 
 
 def _block(target, x_t, sig, anchor, ref, ref_mask, K, kind, alpha, tau_max, clip, gen, return_diag):
     B, d = x_t.shape
+    d_eff = effective_dim(target)
     s2 = sig[:, 0] ** 2  # [B]
     tau = torch.clamp(sig[:, 0], max=tau_max)
     t2 = tau**2
@@ -33,18 +36,18 @@ def _block(target, x_t, sig, anchor, ref, ref_mask, K, kind, alpha, tau_max, cli
     # draw K proposals per row from the mixture
     comp_gauss = torch.rand(B, K, generator=gen, dtype=x_t.dtype) < alpha
     j = torch.multinomial(logr.exp(), K, replacement=True, generator=gen)  # [B, K]
-    eps = torch.randn(B, K, d, generator=gen, dtype=x_t.dtype)
+    eps = target.project(torch.randn(B, K, d, generator=gen, dtype=x_t.dtype))
     y_g = x_t[:, None, :] + sig[:, :, None] * eps
     y_r = ref[j] + tau[:, None, None] * eps
     props = torch.where(comp_gauss[..., None], y_g, y_r)
     parts = props if anchor is None else torch.cat([anchor[:, None, :], props], dim=1)  # [B, P, d]
     # log q_i(parts)
-    log_qg = math.log(alpha) + _log_normal(parts, x_t[:, None, :], s2[:, None]) if alpha > 0 else None
+    log_qg = math.log(alpha) + _log_normal(parts, x_t[:, None, :], s2[:, None], d_eff) if alpha > 0 else None
     # kde term: logsumexp_j [log r_ij + log N(y; ref_j, tau_i^2)]
     P = parts.shape[1]
     flat = parts.reshape(B, P, d)
     dy = torch.cdist(flat, ref.unsqueeze(0).expand(B, -1, -1)) ** 2  # [B, P, R]
-    log_k = logr[:, None, :] - 0.5 * dy / t2[:, None, None] - 0.5 * d * torch.log(2 * math.pi * t2)[:, None, None]
+    log_k = logr[:, None, :] - 0.5 * dy / t2[:, None, None] - 0.5 * d_eff * torch.log(2 * math.pi * t2)[:, None, None]
     log_qr = math.log(1 - alpha) + torch.logsumexp(log_k, dim=-1) if alpha < 1 else None
     if log_qg is None:
         log_q = log_qr
@@ -53,7 +56,7 @@ def _block(target, x_t, sig, anchor, ref, ref_mask, K, kind, alpha, tau_max, cli
     else:
         log_q = torch.logaddexp(log_qg, log_qr)
     E, neg_grad = _energy(target, parts, need_grad=kind in ('tsi', 'mix', 'avg'))
-    loglik = _log_normal(parts, x_t[:, None, :], s2[:, None])  # log N(x_t; y, sigma^2) (symmetric)
+    loglik = _log_normal(parts, x_t[:, None, :], s2[:, None], d_eff)  # log N(x_t; y, sigma^2) (symmetric)
     logw = -E + loglik - log_q
     logw = torch.where(torch.isfinite(logw), logw, torch.full_like(logw, -float('inf')))
     w = torch.nan_to_num(torch.softmax(logw, dim=1), nan=0.0)

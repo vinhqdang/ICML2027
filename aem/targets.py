@@ -289,8 +289,108 @@ class Funnel(_Unconstrained):
         return torch.cat([x0, rest], 1)
 
 
+class _Molecular:
+    """Molecules: n_particles points in spatial_dim dimensions, stored as one flat vector x of length dim.
+
+    The energies are invariant to rigid translations, so the samplers work in the zero-centre-of-mass subspace of
+    dimension d_eff = dim - spatial_dim. project(x) is the orthogonal projector onto that subspace.
+    Subclasses set name, n_particles, spatial_dim, dim, and implement energy(x) (x: [N, dim] -> [N]).
+    """
+
+    name = None
+
+    @property
+    def d_eff(self):
+        return self.dim - self.spatial_dim
+
+    def _pos(self, x):
+        return x.reshape(*x.shape[:-1], self.n_particles, self.spatial_dim)
+
+    def project(self, x):
+        """Remove the centre of mass: subtract the mean over particles, for any leading shape [..., dim]."""
+        p = self._pos(x)
+        return (p - p.mean(dim=-2, keepdim=True)).reshape(x.shape)
+
+    def _pair_sqdist(self, x):
+        """Squared distances for all pairs i < j, [..., n(n-1)/2]."""
+        p = self._pos(x)
+        i, j = torch.triu_indices(self.n_particles, self.n_particles, 1, device=x.device)
+        return ((p[..., i, :] - p[..., j, :]) ** 2).sum(-1)
+
+    def interatomic_distances(self, x):
+        """Pairwise distances d_ij for i < j, [N, n(n-1)/2]."""
+        return self._pair_sqdist(x).sqrt()
+
+    def _reference(self):
+        """Cached exact reference samples (float64, CPU). Raises a clear error when the cache is missing."""
+        if getattr(self, '_ref', None) is None:
+            path = _ref_path(self.name)
+            if not os.path.isfile(path):
+                raise FileNotFoundError(
+                    f'No reference samples for {self.name!r} at {path}. Generate them first with '
+                    f'`python -m aem.mcmc --target {self.name}` (add --device cuda for the full run).')
+            ref = torch.load(path, map_location='cpu', weights_only=True)['samples'].to(torch.float64)
+            assert ref.shape[-1] == self.dim, f'cache {path} has dimension {ref.shape[-1]}, expected {self.dim}'
+            self._ref = ref
+        return self._ref
+
+    def sample(self, n, seed=None, generator=None):
+        """n reference samples drawn from the cache (without replacement while n <= cache size)."""
+        ref = self._reference().to(torch.get_default_device())
+        M = ref.shape[0]
+        g = _gen(seed, generator)
+        if n <= M:
+            idx = torch.randperm(M, generator=g, device=ref.device)[:n]
+        else:
+            idx = torch.randint(M, (n,), generator=g, device=ref.device)
+        return ref[idx].clone()
+
+
+class DW4(_Molecular):
+    """DW-4 (iDEM benchmark): 4 particles in 2D with pairwise double-well energy in the distance d_ij.
+
+    E(x) = 1/(2 tau) sum_{i<j} [a (d_ij - d0) + b (d_ij - d0)^2 + c (d_ij - d0)^4], a = 0, b = -4, c = 0.9, d0 = 4.
+    """
+
+    name = 'dw4'
+
+    def __init__(self, n_particles=4, spatial_dim=2, a=0.0, b=-4.0, c=0.9, d0=4.0, tau=1.0):
+        self.n_particles, self.spatial_dim = n_particles, spatial_dim
+        self.dim = n_particles * spatial_dim
+        self.a, self.b, self.c, self.d0, self.tau = a, b, c, d0, tau
+
+    def energy(self, x):
+        d = self._pair_sqdist(x).clamp_min(1e-12).sqrt()  # the floor keeps the gradient finite at d = 0
+        u = d - self.d0
+        return (self.a * u + self.b * u**2 + self.c * u**4).sum(-1) / (2.0 * self.tau)
+
+
+class LJ13(_Molecular):
+    """LJ-13 (iDEM benchmark): 13 particles in 3D with Lennard-Jones pair energy and a harmonic centring term.
+
+    E(x) = eps/(2 tau) sum_{i<j} [(rm/d_ij)^12 - 2 (rm/d_ij)^6] + c/2 sum_i ||x_i - mean(x)||^2.
+    Distances are floored at min_dist (default 1e-2) so that the energy and its gradient stay finite.
+    """
+
+    name = 'lj13'
+
+    def __init__(self, n_particles=13, spatial_dim=3, eps=1.0, rm=1.0, tau=1.0, c=0.5, min_dist=1e-2):
+        self.n_particles, self.spatial_dim = n_particles, spatial_dim
+        self.dim = n_particles * spatial_dim
+        self.eps, self.rm, self.tau, self.c = eps, rm, tau, c
+        self.min_dist = min_dist
+
+    def energy(self, x):
+        p = self._pos(x)
+        r2 = self._pair_sqdist(x).clamp_min(self.min_dist**2)
+        s6 = (self.rm**2 / r2) ** 3  # (rm / d)^6
+        pair = (s6 * s6 - 2.0 * s6).sum(-1)  # (rm / d)^12 - 2 (rm / d)^6
+        conf = ((p - p.mean(dim=-2, keepdim=True)) ** 2).sum((-1, -2))
+        return self.eps / (2.0 * self.tau) * pair + 0.5 * self.c * conf
+
+
 def get_target(name, **kw):
-    """Build a target by name: 'gmm40', 'mw32', 'funnel10' or 'gmm_d'."""
+    """Build a target by name: 'gmm40', 'mw32', 'funnel10', 'gmm_d', 'dw4' or 'lj13'."""
     if name == 'gmm40':
         return GMM40(**kw)
     if name == 'mw32':
@@ -299,4 +399,8 @@ def get_target(name, **kw):
         return Funnel(**{'dim': 10, **kw})
     if name == 'gmm_d':
         return GMMd(**{'dim': 10, **kw})
+    if name == 'dw4':
+        return DW4(**kw)
+    if name == 'lj13':
+        return LJ13(**kw)
     raise ValueError(f'unknown target {name!r}')

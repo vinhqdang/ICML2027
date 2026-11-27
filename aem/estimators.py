@@ -30,7 +30,7 @@ def _estimate_block(target, x_t, sig, anchor, K, kind, n_isir, clip, generator, 
     cur_anchor = anchor
     for rep in range(n_isir):
         last = rep == n_isir - 1
-        eps = torch.randn(B, K, d, generator=generator, dtype=x_t.dtype)
+        eps = target.project(torch.randn(B, K, d, generator=generator, dtype=x_t.dtype))
         props = x_t[:, None, :] + sig[:, :, None] * eps
         parts = props if cur_anchor is None else torch.cat([cur_anchor[:, None, :], props], dim=1)
 
