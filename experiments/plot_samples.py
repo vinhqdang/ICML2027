@@ -1,4 +1,4 @@
-"""Marginal histograms on MW-32 (seed 0): a Gaussian coordinate and a double-well coordinate, iDEM vs AEM vs truth."""
+"""Marginal histograms on MW-32 (main_gpu, seeds 0-2): a Gaussian coordinate and a double-well coordinate, iDEM vs AEM vs truth."""
 import os, sys
 import matplotlib
 matplotlib.use('Agg')
@@ -11,8 +11,8 @@ from aem.targets import get_target
 
 t = get_target('mw32')
 ref = t.sample(20000, seed=1).numpy()
-runs = {'iDEM': 'idem', 'AEM (explore→anchor)': 'aem_warm'}
-cols = {'iDEM': '#c44e52', 'AEM (explore→anchor)': '#4c72b0'}
+runs = {'iDEM': 'idem', 'AEM (explore→anchor)': 'aem_ea', 'AEM + refine': 'aem_ea_refine'}
+cols = {'iDEM': '#c44e52', 'AEM (explore→anchor)': '#4c72b0', 'AEM + refine': '#55a868'}
 fig, axes = plt.subplots(1, 3, figsize=(7.0, 2.1))
 g_bins = np.linspace(-6, 6, 61); dw_bins = np.linspace(-3, 3, 61)
 axes[0].hist(ref[:, 1::2].ravel(), g_bins, density=True, color='k', alpha=.25, label='exact')
@@ -21,7 +21,7 @@ er = t.energy(torch.tensor(ref)).numpy()
 e_bins = np.linspace(-190, 0, 60)
 axes[2].hist(er, e_bins, density=True, color='k', alpha=.25, label='exact')
 for name, m in runs.items():
-    x = np.concatenate([np.load(os.path.join(ROOT, f'results/main/mw32/{m}/seed{s}/samples.npy')) for s in range(3)])
+    x = np.concatenate([np.load(os.path.join(ROOT, f'results/main_gpu/mw32/{m}/seed{s}/samples.npy')) for s in range(3)])
     axes[0].hist(x[:, 1::2].ravel(), g_bins, density=True, histtype='step', color=cols[name], lw=1.3, label=name)
     axes[1].hist(x[:, 0::2].ravel(), dw_bins, density=True, histtype='step', color=cols[name], lw=1.3, label=name)
     axes[2].hist(t.energy(torch.tensor(x)).numpy(), e_bins, density=True, histtype='step', color=cols[name], lw=1.3)

@@ -25,7 +25,7 @@ TGT_NAME = {'gmm16': 'GMM-10 ($d{=}16$)', 'mw32': 'MW-32 ($d{=}32$)', 'dw4': 'DW
 METH_NAME = {'idem': 'iDEM', 'aem_cold': 'AEM (cold)', 'aem_ea': 'AEM (explore$\\to$anchor)',
              'aem_ea_refine': 'AEM (explore$\\to$anchor) + refine'}
 METRICS = {'gmm16': ['w2', 'energy_w1', 'mmd', 'mode_tv', 'within_var'],
-           'mw32': ['w2', 'energy_w1', 'mmd', 'pattern_tv', 'within_var', 'major_well'],
+           'mw32': ['w2', 'energy_w1', 'mmd', 'pattern_tv', 'within_var'],
            'dw4': ['w2', 'energy_w1', 'dist_w1', 'mmd'], 'lj13': ['w2', 'energy_w1', 'dist_w1', 'mmd']}
 MNAME = {'w2': '$\\mathcal{W}_2$', 'energy_w1': '$\\mathcal{E}$-$\\mathcal{W}_1$', 'mmd': 'MMD', 'mode_tv': 'mode TV',
          'pattern_tv': 'mode TV', 'within_var': 'var.\\ ratio', 'major_well': 'major well', 'dist_w1': '$d$-$\\mathcal{W}_1$'}
@@ -78,7 +78,7 @@ def summarize(runs):
     for (t, m), d in runs.items():
         seeds = sorted(d)
         entry = {'seeds': seeds, 'n': len(seeds)}
-        for k in METRICS[t] + ['wall_time', 'n_energy_evals']:
+        for k in METRICS[t] + ['wall_time', 'n_energy_evals'] + (['major_well'] if t == 'mw32' else []) + (['mode_coverage'] if t == 'gmm16' else []):
             v = np.array([d[sd][-1][k] for sd in seeds], dtype=float)
             entry[k] = {'mean': float(v.mean()), 'std': float(v.std(ddof=1)) if len(v) > 1 else float('nan'),
                         'values': v.tolist()}
@@ -97,9 +97,6 @@ def table(summary, targets, fname):
         for m in ms:
             if m == 'within_var':
                 score = {me: abs(np.log(e[m]['mean'])) for me, e in summary[t].items()}
-            elif m == 'major_well':
-                score = {me: abs(e[m]['mean'] - 0.0) for me, e in summary[t].items()}  # no 'best' for major well
-                score = {}
             else:
                 score = {me: e[m]['mean'] for me, e in summary[t].items()}
             best[m] = min(score, key=score.get) if score else None
@@ -109,7 +106,9 @@ def table(summary, targets, fname):
             e = summary[t][me]
             cells = []
             for m in ms:
-                c = f'{e[m]["mean"]:.3g}{{\\scriptsize$\\pm${e[m]["std"]:.2g}}}'
+                sd = e[m]['std']
+                sds = '--' if not np.isfinite(sd) else ('0' if sd < 1e-9 else f'{sd:.2g}')
+                c = f'{e[m]["mean"]:.3g}{{\\scriptsize$\\pm${sds}}}'
                 cells.append(f'\\textbf{{{c}}}' if best[m] == me else c)
             lines.append(f'{METH_NAME[me]} & ' + ' & '.join(cells) + f' \\\\  % n={e["n"]}')
         lines.append('\\midrule')
