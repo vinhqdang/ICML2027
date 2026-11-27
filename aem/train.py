@@ -38,6 +38,13 @@ class TrainConfig:
     refine_K: int = 64
     refine_start: int = -1  # first outer iteration with refinement; -1: same as anchor_warmup + 1
     refine_sigma_max: Optional[float] = None  # None: sigma_max of the target
+    refine_mode: str = 'full'  # 'full': aem.refine (whole-vector moves); 'subspace': aem.explore subspace i-SIR moves
+    sub_p_full: float = 0.25  # subspace mode: probability of a whole-vector block
+    sub_bmax: int = 0  # subspace mode: max block size (0: dim)
+    explore_walkers: int = 0  # >0: annealed-MALA exploration walkers per outer iteration, used as i-SIR references
+    explore_levels: int = 200  # annealing levels (one MALA step each) per walker
+    explore_frac: float = 0.5  # fraction of the reference set taken from the walkers
+    explore_every: int = 1  # refresh the walker population every this many outer iterations
     no_replace: int = 0  # 1: sample minibatch rows without replacement
     oracle: int = 0  # 1: fixed buffer of exact target samples, no sampler loop (tests the fixed point directly)
     replay: int = 0  # 1: add replay (buffer-KDE) proposals, leave-one-out over the minibatch
@@ -67,7 +74,7 @@ class TrainConfig:
     out_dir: str = 'results/train'
 
 
-_INT_FIELDS = {'refine', 'refine_K', 'refine_start', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
+_INT_FIELDS = {'refine', 'sub_bmax', 'explore_walkers', 'explore_levels', 'explore_every', 'refine_K', 'refine_start', 'no_replace', 'oracle', 'replay', 'anchor_warmup', 'anchor_ramp', 'dim', 'K', 'n_isir', 'seed', 'buffer_size', 'n_outer', 'n_inner', 'batch_size', 'n_new',
                'sde_steps', 'sde_steps_eval', 'n_eval', 'eval_every', 'hidden', 'n_layers', 'time_emb'}
 
 
@@ -131,6 +138,7 @@ def train(cfg=None, **overrides):
     else:
         buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc, project=project)  # buffer from the untrained network
     last_samples = None
+    walkers = None
     summary = {}
     log_path = os.path.join(cfg.out_dir, 'log.jsonl')
     with open(log_path, 'w') as log:
@@ -192,7 +200,19 @@ def train(cfg=None, **overrides):
                 new = project(_sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc, project=project))
                 buf = torch.cat([buf, new])[-cfg.buffer_size:]
             r_start = cfg.refine_start if cfg.refine_start >= 0 else cfg.anchor_warmup + 1
-            if cfg.refine > 0 and it >= r_start:
+            if cfg.refine > 0 and it >= r_start and cfg.refine_mode == 'subspace':
+                from .explore import annealed_walkers, refine_buffer_explore
+                if cfg.explore_walkers > 0 and (walkers is None or (it - r_start) % cfg.explore_every == 0):
+                    walkers, n_w = annealed_walkers(target, cfg.explore_walkers, smax, n_levels=cfg.explore_levels,
+                                                    generator=gen, dtype=buf.dtype)
+                    n_evals += n_w
+                buf, _, n_r = refine_buffer_explore(target, buf, walkers, n_sweeps=cfg.refine, K=cfg.refine_K,
+                                                    alpha=cfg.alpha, tau_max=cfg.tau_max, sigma_min=smin,
+                                                    sigma_max=cfg.refine_sigma_max or smax, b_max=cfg.sub_bmax,
+                                                    p_full=cfg.sub_p_full, explore_frac=cfg.explore_frac,
+                                                    generator=gen)
+                n_evals += n_r
+            elif cfg.refine > 0 and it >= r_start:
                 buf, _ = refine_buffer(target, buf, n_sweeps=cfg.refine, K=cfg.refine_K, alpha=cfg.alpha,
                                        tau_max=cfg.tau_max, sigma_min=smin,
                                        sigma_max=cfg.refine_sigma_max or smax, generator=gen)
