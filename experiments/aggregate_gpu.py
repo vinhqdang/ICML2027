@@ -110,7 +110,7 @@ def summarize(runs):
     return s
 
 
-def table(summary, targets, fname):
+def table(summary, targets, fname, header, colspec):
     lines = []
     for t in targets:
         if t not in summary:
@@ -136,7 +136,8 @@ def table(summary, targets, fname):
                 cells.append(f'\\textbf{{{c}}}' if best[m] == me else c)
             lines.append(f'{METH_NAME[me]} & ' + ' & '.join(cells) + f' \\\\  % n={e["n"]}')
         lines.append('\\midrule')
-    open(os.path.join(ROOT, 'paper', fname), 'w').write('\n'.join(lines[:-1] + ['\\bottomrule']) + '\n')
+    head = [f'\\begin{{tabular}}{{{colspec}}}', '\\toprule', header, '\\midrule']
+    open(os.path.join(ROOT, 'paper', fname), 'w').write('\n'.join(head + lines[:-1] + ['\\bottomrule', '\\end{tabular}']) + '\n')
 
 
 def curves(runs, targets):
@@ -169,9 +170,9 @@ if __name__ == '__main__':
         x = target('mw32').sample(20000, seed=0).numpy()
         summary['mw32_true_major_well'] = float((x[:, 0::2] >= 0).mean())
     json.dump(summary, open(os.path.join(BASE, 'summary.json'), 'w'), indent=1)
-    table(summary, ['gmm16', 'mw32'], 'tab_gpu_free.tex')
-    table(summary, ['dw4', 'lj13'], 'tab_gpu_mol.tex')
-    table(summary, ['oracle_dw4', 'oracle_lj13'], 'tab_gpu_oracle.tex')
+    table(summary, ['gmm16', 'mw32'], 'tab_gpu_free.tex', 'Method & $\\mathcal{W}_2$ & $\\mathcal{E}$-$\\mathcal{W}_1$ & MMD & mode TV & var.\\ ratio \\\\', 'lccccc')
+    table(summary, ['dw4', 'lj13'], 'tab_gpu_mol.tex', 'Method & $\\mathcal{E}$-$\\mathcal{W}_1$ & $\\mathcal{E}$-$\\mathcal{W}_1^{\\mathrm{tr}}$ & $d$-$\\mathcal{W}_1$ & frac.\\ high-$\\mathcal{E}$ \\\\', 'lcccc')
+    table(summary, ['oracle_dw4', 'oracle_lj13'], 'tab_gpu_oracle.tex', 'Method & $\\mathcal{E}$-$\\mathcal{W}_1$ & $\\mathcal{E}$-$\\mathcal{W}_1^{\\mathrm{tr}}$ & $d$-$\\mathcal{W}_1$ & frac.\\ high-$\\mathcal{E}$ \\\\', 'lcccc')
     curves(runs, [t for t in ['gmm16', 'mw32', 'dw4', 'lj13'] if any(k[0] == t for k in runs)])
     for t in summary:
         if isinstance(summary[t], dict) and 'seeds' not in summary[t]:

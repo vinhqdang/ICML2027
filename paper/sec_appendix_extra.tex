@@ -56,3 +56,19 @@ $d$ & $\sigma_t$ & iDEM & AEM & anchor wt.\\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{MW-32 marginals.}
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{fig_mw_marginals.pdf}
+\caption{\textbf{MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates and shifts the energy distribution. The anchored models remove both, but they concentrate the double-well coordinates in the major well.}
+\label{fig:marginals}
+\end{figure}
+
+\paragraph{Combining TSI and DSI.}
+Since every $g$ gives an unbiased target under the same particles and weights, any combination $\alpha_t g_{\mathrm{TSI}}+(1-\alpha_t)g_{\mathrm{DSI}}$ is also unbiased (\cref{thm:unbiased}).
+We use the fixed schedule $\alpha_t=(1+\sigma_t^2)^{-1}$, which trusts TSI at low noise and DSI at high noise. For a target whose components are unit-covariance Gaussians, it makes the per-particle test function constant within a component, so the estimator has zero within-component variance. For other targets it is only a heuristic; a target-adapted choice would use the local curvature. Unlike the control-variate coefficient of \citet{cvsi2025}, it requires no per-batch estimation, which would reintroduce bias. Because this schedule favours unit-variance components, we give it to every method, iDEM included, and we check robustness to non-unit components in \cref{app:extra}.
+
+\paragraph{Practical deviations from the theory.}
+The exactness statements above concern the idealized estimator. Our implementation clips per-particle energy gradients and caps the norm of $\sigma_t\times$target, for stability and identically for all methods. Both are nonlinear and introduce a small bias. In addition, the buffer is a finite set of model samples that is reused across many steps, so even at convergence it is only approximately $\pi$.
+

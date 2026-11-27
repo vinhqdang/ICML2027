@@ -5,24 +5,19 @@ We compare iDEM; AEM from scratch (\emph{cold}; synthetic targets only, to keep 
 \paragraph{iDEM's fixed-point bias is visible, and AEM removes it.}
 \Cref{cor:fixed} predicts that iDEM converges to the biased field $b_K$. On MW-32 this bias has a clear signature: the Gaussian coordinates of iDEM samples have variance \ms{mw32}{idem}{within_var} instead of $1$, and the energy histogram is shifted ($\mathcal{E}$-$\mathcal{W}_1=\val{mw32}{idem}{energy_w1}{m}$). Every AEM variant brings the variance ratio to $\val{mw32}{aem_ea}{within_var}{m}$--$\val{mw32}{aem_ea_refine}{within_var}{m}$ and lowers $\mathcal{E}$-$\mathcal{W}_1$ by $\ratio{mw_ew1_ratio_lo}$--$\ratio{mw_ew1_ratio_hi}\times$, with a better $\mathcal{W}_2$, at $\ratio{evals_over_idem:mw32:aem_ea}\times$ (explore$\to$anchor) or $\ratio{evals_over_idem:mw32:aem_ea_refine}\times$ (with refinement) the energy-evaluation budget of iDEM.
 On GMM-10 the effect is the same but smaller: the within-mode variance ratio is \ms{gmm16}{idem}{within_var} for iDEM and $\val{gmm16}{aem_cold}{within_var}{m}$--$\val{gmm16}{aem_ea_refine}{within_var}{m}$ for AEM, and $\mathcal{E}$-$\mathcal{W}_1$ falls from $\val{gmm16}{idem}{energy_w1}{m}$ to $\val{gmm16}{aem_cold}{energy_w1}{m}$--$\val{gmm16}{aem_ea_refine}{energy_w1}{m}$.
-\Cref{fig:marginals} shows the effect on MW-32: iDEM's Gaussian marginals are too wide and its energy histogram is shifted, while the anchored models match both.
+\Cref{fig:marginals} (\cref{app:extra}) shows the effect on MW-32: iDEM's Gaussian marginals are too wide and its energy histogram is shifted, while the anchored models match both.
 On DW-4 the trend is the same but within noise: $\mathcal{E}$-$\mathcal{W}_1$ is \ms{dw4}{aem_ea}{energy_w1} for explore$\to$anchor AEM against \ms{dw4}{idem}{energy_w1} for iDEM, and the interatomic-distance $\mathcal{W}_1$ is $\val{dw4}{aem_ea}{dist_w1}{m}$ against $\val{dw4}{idem}{dist_w1}{m}$ (three seeds, standard deviations of the same order as the gaps).
-\textbf{On LJ-13, iDEM is better}: its trimmed $\mathcal{E}$-$\mathcal{W}_1$ is \ms{lj13}{idem}{energy_w1_trim} and its distance $\mathcal{W}_1$ is \ms{lj13}{idem}{dist_w1}, against \ms{lj13}{aem_ea}{energy_w1_trim} and \ms{lj13}{aem_ea}{dist_w1} for explore$\to$anchor AEM. We do not have an explanation that we have tested; the anchored runs started from a $15$-iteration iDEM buffer that, at this short budget, may simply be less converged than iDEM's own buffer at iteration $30$.
-The raw $\mathcal{E}$-$\mathcal{W}_1$ on LJ-13 is dominated by a few model samples with enormous energy (overlapping particles): its mean over seeds is of order $10^4$ for every method and varies by orders of magnitude between seeds. We therefore also report it with samples above the $99.9\%$ quantile of the reference energies removed (the table columns marked tr), and the fraction of such samples.
+\textbf{On LJ-13, iDEM is better}: its trimmed $\mathcal{E}$-$\mathcal{W}_1$ is \ms{lj13}{idem}{energy_w1_trim} and its distance $\mathcal{W}_1$ is \ms{lj13}{idem}{dist_w1}, against \ms{lj13}{aem_ea}{energy_w1_trim} and \ms{lj13}{aem_ea}{dist_w1} for explore$\to$anchor AEM. We have not tested explanations for this.
+The raw $\mathcal{E}$-$\mathcal{W}_1$ on LJ-13 is dominated by a few model samples with enormous energy (overlapping particles): its mean over seeds is of order $10^4$ for every method and varies by orders of magnitude between seeds. We therefore also report it with samples above the $99.9\%$ quantile of the reference energies removed (tr), and their fraction.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{fig_curves_gpu.pdf}
+\includegraphics[width=\textwidth,height=0.17\textheight,keepaspectratio]{fig_curves_gpu.pdf}
 \caption{\textbf{Energy $\mathcal{W}_1$ during training} (mean and min--max over 3 seeds; log scale). The dotted line marks the switch from exploration to anchoring in the explore$\to$anchor runs. Before it, those runs coincide with iDEM. On LJ-13 the untrimmed metric is dominated by rare very-high-energy samples.}
 \label{fig:curves}
 \end{figure*}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_mw_marginals.pdf}
-\caption{\textbf{MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates and shifts the energy distribution. The anchored models remove both, but they concentrate the double-well coordinates in the major well.}
-\label{fig:marginals}
-\end{figure}
 
 \paragraph{Oracle buffer: testing the fixed point directly.}
 To rule out explanations such as short training, the stability caps or the sampler loop, we remove the loop entirely. We train on a \emph{fixed buffer of $10^4$ exact samples} from $\pi$ (\texttt{oracle} mode; rows drawn without replacement), so the buffer law is exactly $\pi$ and \cref{cor:fixed} applies verbatim. We then measure the relative error of the learned score against the exact noised score $\nabla\log p_t$ at $x_t=x_0+\sigma_t\varepsilon$, $x_0\sim\pi$ (\cref{tab:oracle}).
+\input{sec_exp_oracle_text}

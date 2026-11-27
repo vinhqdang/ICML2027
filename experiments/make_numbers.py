@@ -63,6 +63,8 @@ for t in ('gmm16', 'mw32', 'dw4', 'lj13'):
     for m in S[t]:
         d(f'r:evals_over_idem:{t}:{m}', fmt(mean(t, m, 'n_energy_evals') / mean(t, 'idem', 'n_energy_evals'), 3))
         d(f'r:gpu_hours:{t}:{m}', fmt(mean(t, m, 'wall_time') * S[t][m]['n'] / 3600, 2))
+tot = sum(S[t][m]['wall_time']['mean'] * S[t][m]['n'] for t in ('gmm16', 'mw32', 'dw4', 'lj13') for m in S[t])
+d('r:gpu_hours_total', fmt(tot / 3600, 2))
 # reference-chain statistics
 for t in ('dw4', 'lj13'):
     j = json.load(open(os.path.join(ROOT, 'results', 'ref', f'{t}_stability.json')))

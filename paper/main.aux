@@ -10,7 +10,6 @@
 \newlabel{sec:intro}{{1}{1}{}{section.1}{}}
 \newlabel{sec:intro@cref}{{[section][1][]1}{[1][1][]1}}
 \citation{akhound2024iterated}
-\citation{andrieu2010particle,andrieu2018uniform}
 \newlabel{sec:method}{{2}{2}{}{section.2}{}}
 \newlabel{sec:method@cref}{{[section][2][]2}{[1][2][]2}}
 \newlabel{eq:tsi}{{1}{2}{}{equation.2.1}{}}
@@ -19,8 +18,9 @@
 \newlabel{eq:dsi@cref}{{[equation][2][]2}{[1][2][]2}}
 \newlabel{eq:snis}{{3}{2}{}{equation.2.3}{}}
 \newlabel{eq:snis@cref}{{[equation][3][]3}{[1][2][]2}}
-\newlabel{eq:aem}{{4}{2}{}{equation.2.4}{}}
-\newlabel{eq:aem@cref}{{[equation][4][]4}{[1][2][]2}}
+\citation{andrieu2010particle,andrieu2018uniform}
+\newlabel{eq:aem}{{4}{3}{}{equation.2.4}{}}
+\newlabel{eq:aem@cref}{{[equation][4][]4}{[1][3][]3}}
 \newlabel{sec:theory}{{2.1}{3}{}{subsection.2.1}{}}
 \newlabel{sec:theory@cref}{{[subsection][1][2]2.1}{[1][3][]3}}
 \newlabel{thm:unbiased}{{2.1}{3}{Exact unbiasedness and Rao--Blackwell variance bound}{theorem.2.1}{}}
@@ -29,87 +29,82 @@
 \newlabel{cor:fixed@cref}{{[corollary][2][2]2.2}{[1][3][]3}}
 \newlabel{thm:contraction}{{2.3}{3}{Bias contraction under an approximate anchor}{theorem.2.3}{}}
 \newlabel{thm:contraction@cref}{{[theorem][3][2]2.3}{[1][3][]3}}
-\newlabel{sec:replay}{{2.2}{3}{}{subsection.2.2}{}}
-\newlabel{sec:replay@cref}{{[subsection][2][2]2.2}{[1][3][]3}}
-\citation{cvsi2025}
 \citation{zhang2022path,vargas2023denoising,berner2024optimal,vargas2024transport,richter2024improved,sendera2024improved,bridgelosses2025,havens2025adjoint,proximal2025}
 \citation{akhound2024iterated}
 \citation{bnem2024}
 \citation{iefm2024}
 \citation{cvsi2025}
 \citation{iwsm2025}
-\citation{ewfm2025}
+\newlabel{sec:replay}{{2.2}{4}{}{subsection.2.2}{}}
+\newlabel{sec:replay@cref}{{[subsection][2][2]2.2}{[1][3][]4}}
 \newlabel{eq:replay}{{5}{4}{}{equation.2.5}{}}
-\newlabel{eq:replay@cref}{{[equation][5][]5}{[1][3][]4}}
+\newlabel{eq:replay@cref}{{[equation][5][]5}{[1][4][]4}}
 \newlabel{sec:refine}{{2.3}{4}{}{subsection.2.3}{}}
 \newlabel{sec:refine@cref}{{[subsection][3][2]2.3}{[1][4][]4}}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{alg:aem}{{1}{4}{Anchored Energy Matching (AEM)}{algorithm.1}{}}
+\newlabel{alg:aem@cref}{{[algorithm][1][]1}{[1][4][]4}}
 \newlabel{prop:refine}{{2.4}{4}{Invariance of refinement}{theorem.2.4}{}}
 \newlabel{prop:refine@cref}{{[proposition][4][2]2.4}{[1][4][]4}}
-\newlabel{sec:related}{{3}{4}{}{section.3}{}}
-\newlabel{sec:related@cref}{{[section][3][]3}{[1][4][]4}}
 \citation{hyvarinen2005estimation,vincent2011connection,song2021score}
 \citation{debortoli2024target}
 \citation{xu2023stable}
 \citation{stablevelocity2026}
-\citation{huang2024reverse,phillips2024particle}
 \citation{andrieu2010particle}
 \citation{andrieu2018uniform}
 \citation{tjelmeland2004using}
 \citation{cardoso2022brsnis}
-\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{alg:aem}{{1}{5}{Anchored Energy Matching (AEM)}{algorithm.1}{}}
-\newlabel{alg:aem@cref}{{[algorithm][1][]1}{[1][4][]5}}
+\newlabel{sec:related}{{3}{5}{}{section.3}{}}
+\newlabel{sec:related@cref}{{[section][3][]3}{[1][4][]5}}
 \newlabel{sec:experiments}{{4}{5}{}{section.4}{}}
 \newlabel{sec:experiments@cref}{{[section][4][]4}{[1][5][]5}}
 \newlabel{sec:exp-estimator}{{4.1}{5}{}{subsection.4.1}{}}
 \newlabel{sec:exp-estimator@cref}{{[subsection][1][4]4.1}{[1][5][]5}}
 \newlabel{sec:exp-training}{{4.2}{6}{}{subsection.4.2}{}}
 \newlabel{sec:exp-training@cref}{{[subsection][2][4]4.2}{[1][6][]6}}
+\newlabel{sec:exp-ablation}{{4.3}{6}{}{subsection.4.3}{}}
+\newlabel{sec:exp-ablation@cref}{{[subsection][3][4]4.3}{[1][6][]6}}
 \newlabel{fig:estimator}{{1}{7}{\textbf {Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma _t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma _t$}{figure.caption.1}{}}
 \newlabel{fig:estimator@cref}{{[figure][1][]1}{[1][6][]7}}
-\newlabel{fig:curves}{{2}{7}{\textbf {Energy $\mathcal {W}_1$ during training} (mean and min--max over 3 seeds). The dotted line marks the switch from exploration to anchoring in the explore$\to $anchor runs. Before it, those runs coincide with iDEM}{figure.caption.2}{}}
+\newlabel{fig:curves}{{2}{7}{\textbf {Energy $\mathcal {W}_1$ during training} (mean and min--max over 3 seeds; log scale). The dotted line marks the switch from exploration to anchoring in the explore$\to $anchor runs. Before it, those runs coincide with iDEM. On LJ-13 the untrimmed metric is dominated by rare very-high-energy samples}{figure.caption.2}{}}
 \newlabel{fig:curves@cref}{{[figure][2][]2}{[1][6][]7}}
-\newlabel{fig:marginals}{{3}{7}{\textbf {MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates, smears mass between the wells and shifts the energy distribution. AEM removes these distortions}{figure.caption.3}{}}
-\newlabel{fig:marginals@cref}{{[figure][3][]3}{[1][6][]7}}
-\newlabel{sec:exp-ablation}{{4.3}{7}{}{subsection.4.3}{}}
-\newlabel{sec:exp-ablation@cref}{{[subsection][3][4]4.3}{[1][6][]7}}
-\newlabel{tab:oracle}{{1}{7}{\textbf {Oracle buffer} (fixed exact samples, no sampler loop; single seed; $K=100$ unless noted). Relative error $\mathbb {E}\|s_\theta -\nabla \log p_t\|^2/\mathbb {E}\|\nabla \log p_t\|^2$ of the learned score at several noise levels}{table.caption.4}{}}
+\newlabel{tab:oracle}{{1}{7}{\textbf {Oracle buffer} (fixed exact samples, no sampler loop; single seed; $K=100$ unless noted). Relative error $\mathbb {E}\|s_\theta -\nabla \log p_t\|^2/\mathbb {E}\|\nabla \log p_t\|^2$ of the learned score at several noise levels}{table.caption.3}{}}
 \newlabel{tab:oracle@cref}{{[table][1][]1}{[1][6][]7}}
-\bibdata{refs}
-\bibcite{akhound2024iterated}{{1}{2024}{{Akhound-Sadegh et~al.}}{{Akhound-Sadegh, Rector-Brooks, Bose, Mittal, Lemos, Liu, Sendera, Ravanbakhsh, Gidel, Bengio, Malkin, and Tong}}}
-\newlabel{tab:main}{{2}{8}{\textbf {Sampler quality after 40 outer iterations} (mean $\pm $ std over 3 seeds; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$); iDEM's fixed-point bias inflates it. Bold marks the best mean in each column (for the variance ratio, the closest to $1$). MMD is the unbiased estimate of MMD$^2$, which can be slightly negative}{table.caption.5}{}}
+\newlabel{tab:main}{{2}{8}{\textbf {Sampler quality on the synthetic targets} (mean $\pm $ sample std over 3 seeds; $80$ outer iterations; lower is better, except that the variance ratio should be $1$). All methods use the same budget and target function. The variance ratio measures within-mode spread (truth $=1$). Bold marks the best mean in each column (for the variance ratio, the closest to $1$). MMD is the unbiased estimate of MMD$^2$. Mode TV is the total-variation distance between empirical and true mode occupancies (GMM-10: the 10 components; MW-32: the 16 sign patterns of the first four double-well coordinates)}{table.caption.4}{}}
 \newlabel{tab:main@cref}{{[table][2][]2}{[1][6][]8}}
+\newlabel{tab:mol}{{3}{8}{\textbf {Molecular targets} (mean $\pm $ sample std over 3 seeds; $40$ outer iterations for DW-4, $30$ for LJ-13; EGNN score network). $\mathcal {E}$-$\mathcal {W}_1$: energy-histogram distance; tr: after removing model samples whose energy exceeds the $99.9\%$ quantile of the reference energies (their fraction is in the last column; the reference itself has $0.1\%$); $d$-$\mathcal {W}_1$: $\mathcal {W}_1$ between pooled interatomic distances. Bold marks the best mean per column}{table.caption.5}{}}
+\newlabel{tab:mol@cref}{{[table][3][]3}{[1][6][]8}}
 \newlabel{sec:conclusion}{{5}{8}{}{section.5}{}}
 \newlabel{sec:conclusion@cref}{{[section][5][]5}{[1][8][]8}}
+\bibdata{refs}
+\bibcite{akhound2024iterated}{{1}{2024}{{Akhound-Sadegh et~al.}}{{Akhound-Sadegh, Rector-Brooks, Bose, Mittal, Lemos, Liu, Sendera, Ravanbakhsh, Gidel, Bengio, Malkin, and Tong}}}
 \bibcite{andrieu2010particle}{{2}{2010}{{Andrieu et~al.}}{{Andrieu, Doucet, and Holenstein}}}
 \bibcite{andrieu2018uniform}{{3}{2018}{{Andrieu et~al.}}{{Andrieu, Lee, and Vihola}}}
 \bibcite{berner2024optimal}{{4}{2024}{{Berner et~al.}}{{Berner, Richter, and Ullrich}}}
 \bibcite{cardoso2022brsnis}{{5}{2022}{{Cardoso et~al.}}{{Cardoso, Samsonov, Thin, Moulines, and Olsson}}}
 \bibcite{debortoli2024target}{{6}{2024}{{De~Bortoli et~al.}}{{De~Bortoli, Hutchinson, Wirnsberger, and Doucet}}}
-\bibcite{ewfm2025}{{7}{2025}{{Dern et~al.}}{{Dern, Redl, Pfister, Kollovieh, L{\"u}dke, and G{\"u}nnemann}}}
-\bibcite{proximal2025}{{8}{2026}{{Guo et~al.}}{{Guo, Choi, Zhu, Tao, and Chen}}}
-\bibcite{havens2025adjoint}{{9}{2025}{{Havens et~al.}}{{Havens, Miller, Yan, Domingo-Enrich, Sriram, Wood, Levine, Hu, Amos, Karrer, Fu, Liu, and Chen}}}
-\bibcite{huang2024reverse}{{10}{2024}{{Huang et~al.}}{{Huang, Dong, Hao, Ma, and Zhang}}}
-\bibcite{hyvarinen2005estimation}{{11}{2005}{{Hyv{\"a}rinen}}{{}}}
-\bibcite{cvsi2025}{{12}{2025}{{Kahouli et~al.}}{{Kahouli, Elie, M{\"u}ller, Berthet, Unke, and Doucet}}}
-\bibcite{midgley2023flow}{{13}{2023}{{Midgley et~al.}}{{Midgley, Stimper, Simm, Sch{\"o}lkopf, and Hern{\'a}ndez-Lobato}}}
-\bibcite{noe2019boltzmann}{{14}{2019}{{No{\'e} et~al.}}{{No{\'e}, Olsson, K{\"o}hler, and Wu}}}
-\bibcite{bnem2024}{{15}{2026}{{OuYang et~al.}}{{OuYang, Qiang, and Hern{\'a}ndez-Lobato}}}
-\bibcite{owen2013monte}{{16}{2013}{{Owen}}{{}}}
-\bibcite{phillips2024particle}{{17}{2024}{{Phillips et~al.}}{{Phillips, Dau, Hutchinson, De~Bortoli, Deligiannidis, and Doucet}}}
-\bibcite{richter2024improved}{{18}{2024}{{Richter \& Berner}}{{Richter and Berner}}}
-\bibcite{bridgelosses2025}{{19}{2025}{{Sanokowski et~al.}}{{Sanokowski, Gruber, Bartmann, Hochreiter, and Lehner}}}
-\bibcite{sendera2024improved}{{20}{2024}{{Sendera et~al.}}{{Sendera, Kim, Mittal, Lemos, Scimeca, Rector-Brooks, Adam, Bengio, and Malkin}}}
-\bibcite{song2021score}{{21}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
-\bibcite{tjelmeland2004using}{{22}{2004}{{Tjelmeland}}{{}}}
-\bibcite{vargas2023denoising}{{23}{2023}{{Vargas et~al.}}{{Vargas, Grathwohl, and Doucet}}}
-\bibcite{vargas2024transport}{{24}{2024}{{Vargas et~al.}}{{Vargas, Padhy, Blessing, and N{\"u}sken}}}
-\bibcite{vincent2011connection}{{25}{2011}{{Vincent}}{{}}}
-\bibcite{iwsm2025}{{26}{2025}{{Wang et~al.}}{{Wang, Zhang, Cui, Zhao, Guan, and Yu}}}
-\bibcite{iefm2024}{{27}{2024}{{Woo \& Ahn}}{{Woo and Ahn}}}
-\bibcite{xu2023stable}{{28}{2023}{{Xu et~al.}}{{Xu, Tong, and Jaakkola}}}
-\bibcite{stablevelocity2026}{{29}{2026}{{Yang et~al.}}{{Yang, Zhang, Yu, Hou, Tao, Wan, Qi, and Liao}}}
-\bibcite{zhang2022path}{{30}{2022}{{Zhang \& Chen}}{{Zhang and Chen}}}
+\bibcite{proximal2025}{{7}{2026}{{Guo et~al.}}{{Guo, Choi, Zhu, Tao, and Chen}}}
+\bibcite{havens2025adjoint}{{8}{2025}{{Havens et~al.}}{{Havens, Miller, Yan, Domingo-Enrich, Sriram, Wood, Levine, Hu, Amos, Karrer, Fu, Liu, and Chen}}}
+\bibcite{hyvarinen2005estimation}{{9}{2005}{{Hyv{\"a}rinen}}{{}}}
+\bibcite{cvsi2025}{{10}{2025}{{Kahouli et~al.}}{{Kahouli, Elie, M{\"u}ller, Berthet, Unke, and Doucet}}}
+\bibcite{midgley2023flow}{{11}{2023}{{Midgley et~al.}}{{Midgley, Stimper, Simm, Sch{\"o}lkopf, and Hern{\'a}ndez-Lobato}}}
+\bibcite{noe2019boltzmann}{{12}{2019}{{No{\'e} et~al.}}{{No{\'e}, Olsson, K{\"o}hler, and Wu}}}
+\bibcite{bnem2024}{{13}{2026}{{OuYang et~al.}}{{OuYang, Qiang, and Hern{\'a}ndez-Lobato}}}
+\bibcite{owen2013monte}{{14}{2013}{{Owen}}{{}}}
+\bibcite{richter2024improved}{{15}{2024}{{Richter \& Berner}}{{Richter and Berner}}}
+\bibcite{bridgelosses2025}{{16}{2025}{{Sanokowski et~al.}}{{Sanokowski, Gruber, Bartmann, Hochreiter, and Lehner}}}
+\bibcite{satorras2021en}{{17}{2021}{{Satorras et~al.}}{{Satorras, Hoogeboom, and Welling}}}
+\bibcite{sendera2024improved}{{18}{2024}{{Sendera et~al.}}{{Sendera, Kim, Mittal, Lemos, Scimeca, Rector-Brooks, Adam, Bengio, and Malkin}}}
+\bibcite{song2021score}{{19}{2021}{{Song et~al.}}{{Song, Sohl-Dickstein, Kingma, Kumar, Ermon, and Poole}}}
+\bibcite{tjelmeland2004using}{{20}{2004}{{Tjelmeland}}{{}}}
+\bibcite{vargas2023denoising}{{21}{2023}{{Vargas et~al.}}{{Vargas, Grathwohl, and Doucet}}}
+\bibcite{vargas2024transport}{{22}{2024}{{Vargas et~al.}}{{Vargas, Padhy, Blessing, and N{\"u}sken}}}
+\bibcite{vincent2011connection}{{23}{2011}{{Vincent}}{{}}}
+\bibcite{iwsm2025}{{24}{2025}{{Wang et~al.}}{{Wang, Zhang, Cui, Zhao, Guan, and Yu}}}
+\bibcite{iefm2024}{{25}{2024}{{Woo \& Ahn}}{{Woo and Ahn}}}
+\bibcite{xu2023stable}{{26}{2023}{{Xu et~al.}}{{Xu, Tong, and Jaakkola}}}
+\bibcite{stablevelocity2026}{{27}{2026}{{Yang et~al.}}{{Yang, Zhang, Yu, Hou, Tao, Wan, Qi, and Liao}}}
+\bibcite{zhang2022path}{{28}{2022}{{Zhang \& Chen}}{{Zhang and Chen}}}
 \bibstyle{icml2026}
 \citation{andrieu2010particle}
 \newlabel{app:proofs}{{A}{11}{Impact Statement}{appendix.A}{}}
@@ -117,14 +112,19 @@
 \citation{owen2013monte}
 \citation{midgley2023flow}
 \citation{midgley2023flow}
+\citation{akhound2024iterated}
 \newlabel{app:idem-bias}{{A.4}{12}{Impact Statement}{subsection.A.4}{}}
 \newlabel{app:idem-bias@cref}{{[subappendix][4][2147483647,1]A.4}{[1][12][]12}}
 \newlabel{app:exp}{{B}{12}{Impact Statement}{appendix.B}{}}
 \newlabel{app:exp@cref}{{[appendix][2][2147483647]B}{[1][12][]12}}
+\citation{satorras2021en}
 \newlabel{app:extra}{{C}{13}{Impact Statement}{appendix.C}{}}
 \newlabel{app:extra@cref}{{[appendix][3][2147483647]C}{[1][13][]13}}
-\newlabel{tab:replay}{{3}{13}{Relative MSE (relative squared bias in parentheses) of the score target on GMM-10 ($d=16$) at high noise}{table.caption.8}{}}
-\newlabel{tab:replay@cref}{{[table][3][2147483647]3}{[1][13][]13}}
-\newlabel{tab:dimsweep}{{4}{14}{Relative MSE (relative squared bias) of the training test function, and AEM's mean anchor weight, against dimension}{table.caption.9}{}}
-\newlabel{tab:dimsweep@cref}{{[table][4][2147483647]4}{[1][13][]14}}
-\gdef \@abspage@last{14}
+\citation{cvsi2025}
+\newlabel{tab:replay}{{4}{14}{Relative MSE (relative squared bias in parentheses) of the score target on GMM-10 ($d=16$) at high noise}{table.caption.8}{}}
+\newlabel{tab:replay@cref}{{[table][4][2147483647]4}{[1][13][]14}}
+\newlabel{tab:dimsweep}{{5}{14}{Relative MSE (relative squared bias) of the training test function, and AEM's mean anchor weight, against dimension}{table.caption.9}{}}
+\newlabel{tab:dimsweep@cref}{{[table][5][2147483647]5}{[1][14][]14}}
+\newlabel{fig:marginals}{{3}{14}{\textbf {MW-32 marginals} (samples pooled over 3 seeds) against exact samples (grey). iDEM's fixed-point bias widens the Gaussian coordinates and shifts the energy distribution. The anchored models remove both, but they concentrate the double-well coordinates in the major well}{figure.caption.10}{}}
+\newlabel{fig:marginals@cref}{{[figure][3][2147483647]3}{[1][14][]14}}
+\gdef \@abspage@last{15}

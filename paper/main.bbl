@@ -1,4 +1,4 @@
-\begin{thebibliography}{30}
+\begin{thebibliography}{28}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -46,14 +46,6 @@ De~Bortoli, V., Hutchinson, M., Wirnsberger, P., and Doucet, A.
 \newblock Target score matching.
 \newblock \emph{arXiv preprint arXiv:2402.08667}, 2024.
 
-\bibitem[Dern et~al.(2025)Dern, Redl, Pfister, Kollovieh, L{\"u}dke, and
-  G{\"u}nnemann]{ewfm2025}
-Dern, N., Redl, L., Pfister, S., Kollovieh, M., L{\"u}dke, D., and
-  G{\"u}nnemann, S.
-\newblock Energy-weighted flow matching: Unlocking continuous normalizing flows
-  for efficient and scalable {B}oltzmann sampling.
-\newblock \emph{arXiv preprint arXiv:2509.03726}, 2025.
-
 \bibitem[Guo et~al.(2026)Guo, Choi, Zhu, Tao, and Chen]{proximal2025}
 Guo, W., Choi, J., Zhu, Y., Tao, M., and Chen, Y.
 \newblock Proximal diffusion neural sampler.
@@ -67,11 +59,6 @@ Havens, A., Miller, B.~K., Yan, B., Domingo-Enrich, C., Sriram, A., Wood, B.,
 \newblock Adjoint sampling: Highly scalable diffusion samplers via adjoint
   matching.
 \newblock In \emph{International Conference on Machine Learning}, 2025.
-
-\bibitem[Huang et~al.(2024)Huang, Dong, Hao, Ma, and Zhang]{huang2024reverse}
-Huang, X., Dong, H., Hao, Y., Ma, Y., and Zhang, T.
-\newblock Reverse diffusion {M}onte {C}arlo.
-\newblock In \emph{International Conference on Learning Representations}, 2024.
 
 \bibitem[Hyv{\"a}rinen(2005)]{hyvarinen2005estimation}
 Hyv{\"a}rinen, A.
@@ -111,13 +98,6 @@ Owen, A.~B.
 \newblock \emph{{M}onte {C}arlo theory, methods and examples}.
 \newblock Stanford, 2013.
 
-\bibitem[Phillips et~al.(2024)Phillips, Dau, Hutchinson, De~Bortoli,
-  Deligiannidis, and Doucet]{phillips2024particle}
-Phillips, A., Dau, H.-D., Hutchinson, M.~J., De~Bortoli, V., Deligiannidis, G.,
-  and Doucet, A.
-\newblock Particle denoising diffusion sampler.
-\newblock In \emph{International Conference on Machine Learning}, 2024.
-
 \bibitem[Richter \& Berner(2024)Richter and Berner]{richter2024improved}
 Richter, L. and Berner, J.
 \newblock Improved sampling via learned diffusions.
@@ -128,6 +108,11 @@ Richter, L. and Berner, J.
 Sanokowski, S., Gruber, L., Bartmann, C., Hochreiter, S., and Lehner, S.
 \newblock Rethinking losses for diffusion bridge samplers.
 \newblock In \emph{Advances in Neural Information Processing Systems}, 2025.
+
+\bibitem[Satorras et~al.(2021)Satorras, Hoogeboom, and Welling]{satorras2021en}
+Satorras, V.~G., Hoogeboom, E., and Welling, M.
+\newblock {E}({n}) equivariant graph neural networks.
+\newblock In \emph{International Conference on Machine Learning}, 2021.
 
 \bibitem[Sendera et~al.(2024)Sendera, Kim, Mittal, Lemos, Scimeca,
   Rector-Brooks, Adam, Bengio, and Malkin]{sendera2024improved}
