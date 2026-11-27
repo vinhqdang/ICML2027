@@ -6,8 +6,13 @@ Conventions
 - posterior_sample(x_t, sigma, generator=None) draws x0 ~ pi(x0 | x_t) exactly, for x_t = x0 + sigma * eps.
 - noised_score(x_t, sigma) returns grad log p_t(x_t) for the VE-noised target, in closed form or by quadrature.
 - tempered() / mode_dropped() return the corrupted targets used for anchor-corruption experiments.
+- project(x) maps noise onto the sampling space. Identity for the free targets; the zero-centre-of-mass projector
+  for the molecular targets (dw4, lj13). Samplers apply it to every Gaussian perturbation and score.
+- Molecular targets (dw4, lj13) also have interatomic_distances(x) and sample() from a cached reference run
+  (python -m aem.mcmc --target dw4). Their Gaussian densities live on d_eff = dim - spatial_dim dimensions.
 """
 import math
+import os
 
 import torch
 
@@ -17,7 +22,28 @@ DEFAULTS = {
     'mw32': (0.01, 3.0, None),
     'funnel10': (0.01, 10.0, 1e3),
     'gmm_d': (0.01, 20.0, None),
+    'dw4': (0.01, 3.0, None),
+    'lj13': (0.01, 2.0, 1e3),
 }
+
+_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+
+
+def _ref_path(name):
+    """Cache file of exact reference samples. The environment variable AEM_DATA_DIR overrides the folder."""
+    return os.path.join(os.environ.get('AEM_DATA_DIR', _DATA_DIR), f'{name}_ref.pt')
+
+
+class _Unconstrained:
+    """Targets on the full R^dim: the projection onto the sampling space is the identity."""
+
+    def project(self, x):
+        return x
+
+
+def effective_dim(target):
+    """Dimension of the space the samplers work in. Gaussian densities and their normalisers use this."""
+    return getattr(target, 'd_eff', target.dim)
 
 
 def as_col(sigma, B):
@@ -58,7 +84,7 @@ def _inv_cdf(logp, grid, u):
     return g0 + frac * (g1 - g0)
 
 
-class GMM:
+class GMM(_Unconstrained):
     """Equal-weight mixture of isotropic Gaussians N(mu_i, std^2 I).
 
     energy = -(logsumexp_i log N(x; mu_i, std^2 I) - log M), i.e. -log of the mixture density up to a constant.
@@ -152,7 +178,7 @@ def _dw(x):
     return x**4 - 6.0 * x**2 - 0.5 * x
 
 
-class ManyWell:
+class ManyWell(_Unconstrained):
     """ManyWell target. Coordinates (2i, 2i+1): double well and Gaussian.
 
     energy = beta * sum_i [x_{2i}^4 - 6 x_{2i}^2 - 0.5 x_{2i} + 0.5 x_{2i+1}^2].
@@ -244,7 +270,7 @@ class ManyWell:
         return out
 
 
-class Funnel:
+class Funnel(_Unconstrained):
     """Funnel: x0 ~ N(0, 9), x_i | x0 ~ N(0, exp(x0)) for i = 1..dim-1. Energy drops constants."""
 
     plot_bounds = (-9.0, 9.0)
