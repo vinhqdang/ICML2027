@@ -1,0 +1,12 @@
+mw32: relative score error (mean +- std, ddof=1) over seeds {0,1,2}, K=100 runs
+method  sigma         mean          std   n
+   aem   0.03   7.7305e-01   3.1272e-02   3
+   aem    0.1   5.1456e-01   1.6415e-02   3
+   aem    0.3   3.4969e-01   9.8947e-03   3
+   aem    1.0   1.4046e-01   2.9186e-03   3
+   aem    2.0   7.4414e-02   4.2517e-03   3
+  idem   0.03   1.2908e+00   4.0430e-02   3
+  idem    0.1   9.2593e-01   1.3180e-02   3
+  idem    0.3   1.0177e+00   8.8437e-02   3
+  idem    1.0   2.4971e+01   2.6229e+00   3
+  idem    2.0   3.5020e+01   2.2961e+00   3
