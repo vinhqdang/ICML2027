@@ -1,0 +1,18 @@
+K=100 N=400 R=64
+sigma=0.1 capped=False: rel_bias2=0.0009019 rel_var=0.024 rel_mse=0.0249
+sigma=0.1 capped=True: rel_bias2=0.0009019 rel_var=0.024 rel_mse=0.0249
+sigma=0.3 capped=False: rel_bias2=0.5626 rel_var=1.761 rel_mse=2.324
+sigma=0.3 capped=True: rel_bias2=0.5626 rel_var=1.761 rel_mse=2.324
+sigma=1.0 capped=False: rel_bias2=43.01 rel_var=76.39 rel_mse=119.4
+sigma=1.0 capped=True: rel_bias2=28.34 rel_var=57.61 rel_mse=85.95
+sigma=2.0 capped=False: rel_bias2=439.6 rel_var=657.1 rel_mse=1097
+sigma=2.0 capped=True: rel_bias2=35.46 rel_var=76.74 rel_mse=112.2
+K=1000 N=400 R=64
+sigma=0.1 capped=False: rel_bias2=4.782e-05 rel_var=0.004735 rel_mse=0.004783
+sigma=0.1 capped=True: rel_bias2=4.782e-05 rel_var=0.004735 rel_mse=0.004783
+sigma=0.3 capped=False: rel_bias2=0.2102 rel_var=1.023 rel_mse=1.233
+sigma=0.3 capped=True: rel_bias2=0.2102 rel_var=1.023 rel_mse=1.233
+sigma=1.0 capped=False: rel_bias2=13.69 rel_var=36.19 rel_mse=49.88
+sigma=1.0 capped=True: rel_bias2=12.22 rel_var=34.32 rel_mse=46.54
+sigma=2.0 capped=False: rel_bias2=140.8 rel_var=242.6 rel_mse=383.5
+sigma=2.0 capped=True: rel_bias2=26.49 rel_var=67.31 rel_mse=93.81

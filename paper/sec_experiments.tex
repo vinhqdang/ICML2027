@@ -12,7 +12,7 @@ All methods share one codebase, network, noise schedule, test function, proposal
 \subsection{Is the training target consistent? (Q1)}
 \label{sec:exp-estimator}
 For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evaluate $\nabla\log p_t$ in closed form, so bias and variance can be measured directly.
-\Cref{fig:estimator} reports the relative MSE and relative squared bias of each estimator over 12 noise levels, averaged over 256 points and 32 independent repeats. In each repeat the proposals and the anchor are redrawn.
+\Cref{fig:estimator} (\cref{app:extra}) reports the relative MSE and relative squared bias of each estimator over 12 noise levels, averaged over 256 points and 32 independent repeats. In each repeat the proposals and the anchor are redrawn.
 \input{sec_exp_estimator_text}
 \input{sec_exp_diag_text}
 
@@ -53,7 +53,7 @@ To rule out explanations such as short training, the stability caps or the sampl
 target & method & 0.03 & 0.1 & 0.3 & 1 & 2\\
 \midrule
 MW-32 & iDEM & $1.29{\pm}.04$ & $0.93{\pm}.01$ & $1.02{\pm}.09$ & $25.0{\pm}2.6$ & $35.0{\pm}2.3$\\
- & iDEM$_{K=1000}$ & 1.28 & 0.93 & 0.91 & 9.79 & 27.6\\
+ & iDEM$_{K=1000}$ & 1.27 & 0.93 & 0.92 & 9.98 & 26.8\\
  & AEM & $\mathbf{0.77{\pm}.03}$ & $\mathbf{0.51{\pm}.02}$ & $\mathbf{0.35{\pm}.01}$ & $\mathbf{0.140{\pm}.003}$ & $\mathbf{0.074{\pm}.004}$\\
 GMM-10 & iDEM & $0.21{\pm}.06$ & $0.043{\pm}.011$ & $0.013{\pm}.001$ & $0.010{\pm}.001$ & $0.0074{\pm}.0001$\\
  & iDEM$_{K=1000}$ & 0.12 & 0.040 & 0.014 & 0.012 & 0.008\\
@@ -62,12 +62,7 @@ GMM-10 & iDEM & $0.21{\pm}.06$ & $0.043{\pm}.011$ & $0.013{\pm}.001$ & $0.010{\p
 \end{tabular}}
 \end{table}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{fig_estimator_gmm40.pdf}
-\caption{\textbf{Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma_t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma_t$.}
-\label{fig:estimator}
-\end{figure*}
+
 
 % -------------------------------------------------------------
 \subsection{Training samplers (Q3)}

@@ -1,6 +1,6 @@
 We train on two synthetic targets, a 10-component Gaussian mixture in $d=16$ (GMM-10) and the many-well MW-32 ($d=32$, $2^{16}$ modes), and on the two molecular benchmarks DW-4 ($d=8$) and LJ-13 ($d=39$) with an equivariant score network. All runs use a Colab T4 GPU and \cnt{gmm16}{idem} seeds (0--2). The molecular reference samples come from long MALA runs (\cref{app:exp}).
 We compare iDEM; AEM from scratch (\emph{cold}; synthetic targets only, to keep the molecular budget small); explore$\to$anchor AEM (iDEM for the first half of training, then anchored targets; this phase is identical to the iDEM run with the same seed); and explore$\to$anchor AEM with exact buffer refinement (\cref{sec:refine}) switched on together with the anchor. The training budget is $80$ outer iterations for the synthetic targets, $40$ for DW-4 and $30$ for LJ-13. Everything except the method flags is identical within a target.
-\Cref{tab:main,tab:mol} report the final metrics and \cref{fig:curves} the training curves.
+\Cref{tab:main,tab:mol} report the final metrics and \cref{fig:curves} (\cref{app:extra}) the training curves.
 
 \paragraph{iDEM's fixed-point bias is visible, and AEM removes it.}
 \Cref{cor:fixed} predicts that iDEM converges to the biased field $b_K$. On MW-32 this bias has a clear signature: the Gaussian coordinates of iDEM samples have variance \ms{mw32}{idem}{within_var} instead of $1$, and the energy histogram is shifted ($\mathcal{E}$-$\mathcal{W}_1=\val{mw32}{idem}{energy_w1}{m}$). Every AEM variant brings the variance ratio to $\val{mw32}{aem_ea}{within_var}{m}$--$\val{mw32}{aem_ea_refine}{within_var}{m}$ and lowers $\mathcal{E}$-$\mathcal{W}_1$ by $\ratio{mw_ew1_ratio_lo}$--$\ratio{mw_ew1_ratio_hi}\times$, with a better $\mathcal{W}_2$, at $\ratio{evals_over_idem:mw32:aem_ea}\times$ (explore$\to$anchor) or $\ratio{evals_over_idem:mw32:aem_ea_refine}\times$ (with refinement) the energy-evaluation budget of iDEM.
@@ -9,9 +9,4 @@ On DW-4 the trend is the same but within noise: $\mathcal{E}$-$\mathcal{W}_1$ is
 \textbf{On LJ-13, iDEM is better}: its trimmed $\mathcal{E}$-$\mathcal{W}_1$ is \ms{lj13}{idem}{energy_w1_trim} and its distance $\mathcal{W}_1$ is \ms{lj13}{idem}{dist_w1}, against \ms{lj13}{aem_ea}{energy_w1_trim} and \ms{lj13}{aem_ea}{dist_w1} for explore$\to$anchor AEM. We have not tested explanations for this.
 (The raw $\mathcal{E}$-$\mathcal{W}_1$ on LJ-13 is dominated by a few overlapping-particle samples for every method, hence the trimmed version.) The LJ-13 loss coexists with a consistent target: the test of \cref{tab:diag} rejects iDEM's target and not AEM's, which shows that consistency alone does not decide sample quality at this budget.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth,height=0.17\textheight,keepaspectratio]{fig_curves_gpu.pdf}
-\caption{\textbf{Energy $\mathcal{W}_1$ during training} (mean and min--max over 3 seeds; log scale). The dotted line marks the switch from exploration to anchoring in the explore$\to$anchor runs. Before it, those runs coincide with iDEM. On LJ-13 the untrimmed metric is dominated by rare very-high-energy samples.}
-\label{fig:curves}
-\end{figure*}
+

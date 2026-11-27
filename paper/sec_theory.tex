@@ -110,12 +110,12 @@ Finally, the TSI and DSI test functions are unbounded. For them the bound holds 
 
 \begin{proposition}[Consistency checks]
 \label{prop:diag}
-(i)~Let $T$ be any score target computed from $x_t$, the energy and auxiliary randomness (which may include $x_0$). Then $\mathbb{E}[T\mid x_t]=\nabla\log p_t(x_t)$ almost surely if and only if
-$D_h=\mathbb{E}\big[(T-u)\cdot h(x_t)\big]=0$ for every bounded test function $h$.
+(i)~Let $T$ be an integrable score target computed from $x_t$, the energy and auxiliary randomness (which may include $x_0$). Then $\mathbb{E}[T\mid x_t]=\nabla\log p_t(x_t)$ almost surely if and only if
+$D_h=\mathbb{E}\big[(T-u)\cdot h(x_t)\big]=0$ for every bounded measurable $h:\mathbb{R}^d\to\mathbb{R}^d$ (and then also for every $h$ with $\mathbb{E}|(T-u)\cdot h(x_t)|<\infty$).
 (ii)~For any score model $s$, $\ \mathbb{E}\|s(x_t)-u\|^2=\mathbb{E}\|s(x_t)-\nabla\log p_t(x_t)\|^2+C_t$, where $C_t$ does not depend on $s$.
 \end{proposition}
 Part~(i) follows from $\mathbb{E}[T-u\mid x_t]=\mathbb{E}[T\mid x_t]-\nabla\log p_t(x_t)$, and part~(ii) is the classical identity behind denoising score matching~\citep{vincent2011connection}.
-By (i), a finite set of test functions $h$ gives a $z$-test of the null hypothesis ``$T$ is conditionally unbiased'': AEM with an exact anchor must pass it for every $K$ (\cref{thm:unbiased}), and iDEM must fail it wherever $b_K\neq\nabla\log p_t$. By (ii), the held-out denoising loss of two trained networks differs by exactly the difference of their score errors, so models trained on the same exact buffer can be ranked by score error without knowing the score.
+By (i), a finite set of test functions $h$ gives a $z$-test of the null hypothesis ``$T$ is conditionally unbiased''. A rejection is evidence of bias; a pass is not evidence of consistency, because a finite set of $h$ and a finite $N$ detect only some departures. AEM with an exact anchor satisfies the null for every $K$ (\cref{thm:unbiased}). Two caveats matter in practice. When the reference samples come from MCMC, both statements refer to the reference law instead of $\pi$. And when the anchor carries almost all the weight, $T_{\mathrm{AEM}}\approx u$ and the test has little power against AEM, so an AEM pass does not validate the reference; the informative outcome is a rejection of another estimator. By (ii), the held-out denoising loss of two trained networks differs by exactly the difference of their score errors, so models trained on the same exact buffer can be ranked by score error without knowing the score.
 
 \subsection{Extensions}
 \label{sec:ext}

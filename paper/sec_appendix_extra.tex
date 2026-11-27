@@ -1,6 +1,20 @@
 \section{Additional results}
 \label{app:extra}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_estimator_gmm40.pdf}
+\caption{\textbf{Estimator study on GMM-40.} Relative MSE (top) and debiased relative squared bias (bottom) of the noised-score target against $\sigma_t$, for iDEM (dashed) and AEM (solid) with TSI or DSI test functions. Columns use exact anchors (left), anchors from a tempered target (centre) and anchors from a target missing half of its modes (right). With exact anchors AEM is unbiased for every $K$, including $K=0$. iDEM's bias grows by orders of magnitude with $\sigma_t$.}
+\label{fig:estimator}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth,height=0.17\textheight,keepaspectratio]{fig_curves_gpu.pdf}
+\caption{\textbf{Energy $\mathcal{W}_1$ during training} (mean and min--max over 3 seeds; log scale). The dotted line marks the switch from exploration to anchoring in the explore$\to$anchor runs. Before it, those runs coincide with iDEM. On LJ-13 the untrimmed metric is dominated by rare very-high-energy samples.}
+\label{fig:curves}
+\end{figure*}
+
 \paragraph{Replay proposals at the estimator level.}
 \Cref{tab:replay} compares four estimators on GMM-10 ($d=16$, $K=100$, precision-weighted test function, 128 points, 8 repeats). The four are iDEM, AEM with Gaussian proposals, replay-SNIS without an anchor, and AEM with replay proposals. Three buffers are used: exact; \emph{skewed}, where half of the modes are over-represented $4{:}1$; and \emph{dropped}, where half of the modes are missing. The anchors and the replay reference set come from the buffer.
 At low noise all estimators are essentially exact, because the precision-weighted test function has zero variance within a unit Gaussian component.

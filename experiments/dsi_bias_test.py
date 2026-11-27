@@ -38,13 +38,14 @@ def _clip_rows(v, c):
     return v * torch.clamp(c / nrm.clamp_min(1e-300), max=1.0)
 
 
-def run_target(name, sigmas, N, out_path, seed_x0=12345, seed_eps=2024, seed_est=7):
+def run_target(name, sigmas, N, out_path, seed_x0=12345, seed_eps=2024, seed_est=7, rep=0):
+    seed_x0, seed_eps, seed_est = seed_x0 + 1000 * rep, seed_eps + 1000 * rep, seed_est + 1000 * rep
     target = get_target('gmm_d', dim=16) if name == 'gmm16' else get_target(name)
     tname = name
     clip = 1000.0 if name == 'lj13' else None  # training clip for LJ-13, none for DW-4 and gmm16
     x0 = target.sample(N, seed=seed_x0).to(torch.float64)
     ests = [('idem', None, 100), ('aem', 'x0', 100)]
-    if name == 'dw4':
+    if name == 'dw4' and rep == 0:
         ests.append(('idem', None, 1000))
     has_exact = hasattr(target, 'noised_score')
     if has_exact:
@@ -96,7 +97,8 @@ if __name__ == '__main__':
     p.add_argument('--target', required=True, choices=['gmm16', 'dw4', 'lj13'])
     p.add_argument('--sigmas', type=float, nargs='+', required=True)
     p.add_argument('--N', type=int, default=20000)
+    p.add_argument('--rep', type=int, default=0, help='replicate index; shifts all seeds (x0, noise, estimator)')
     p.add_argument('--out', default=os.path.join(ROOT, 'results', 'dsi_bias', 'dsi_bias.csv'))
     a = p.parse_args()
     torch.set_default_dtype(torch.float32)
-    run_target(a.target, a.sigmas, a.N, a.out)
+    run_target(a.target, a.sigmas, a.N, a.out, rep=a.rep)
