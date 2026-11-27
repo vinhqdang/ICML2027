@@ -105,6 +105,19 @@ It also explains graceful degradation. A poor anchor (low $\tilde\pi(x_0)$) gets
 The constant is also honest about the limitation. For Gaussian proposals, $M_t$ grows exponentially with dimension (for a unit Gaussian component near its mode, $M_t\approx e^{d/2}$). So for $d\ge16$ and practical $K$, the guaranteed contraction is weak ($\epsilon_K\ll1$), and $1-\epsilon_K$ decays only like $1/K$. In that regime the anchored target leans on the buffer, and the theorem predicts that AEM keeps, rather than corrects, buffer errors that no proposal can see. \Cref{sec:exp-ablation} shows exactly this.
 Finally, the TSI and DSI test functions are unbounded. For them the bound holds after clipping $g$, which we do in practice, or in a weighted norm under a drift condition that we do not verify.
 
+\subsection{Two consistency checks that need only samples}
+\label{sec:diagnostics}
+\Cref{cor:fixed} is a statement about population minimizers. To test it on targets whose noised score has no closed form, such as molecular systems, we use two checks that need only samples from $\pi$ (for instance, a long MCMC reference) and the estimator itself. Let $x_0\sim\pi$, $x_t=x_0+\sigma_t\varepsilon$, and write $u=(x_0-x_t)/\sigma_t^2$ for the denoising target, which satisfies $\mathbb{E}[u\mid x_t]=\nabla\log p_t(x_t)$ by \eqref{eq:dsi}.
+
+\begin{proposition}[Consistency checks]
+\label{prop:diag}
+(i)~Let $T$ be any score target computed from $x_t$, the energy and auxiliary randomness (which may include $x_0$). Then $\mathbb{E}[T\mid x_t]=\nabla\log p_t(x_t)$ almost surely if and only if
+$D_h=\mathbb{E}\big[(T-u)\cdot h(x_t)\big]=0$ for every bounded test function $h$.
+(ii)~For any score model $s$, $\ \mathbb{E}\|s(x_t)-u\|^2=\mathbb{E}\|s(x_t)-\nabla\log p_t(x_t)\|^2+C_t$, where $C_t$ does not depend on $s$.
+\end{proposition}
+Part~(i) follows from $\mathbb{E}[T-u\mid x_t]=\mathbb{E}[T\mid x_t]-\nabla\log p_t(x_t)$, and part~(ii) is the classical identity behind denoising score matching~\citep{vincent2011connection}.
+By (i), a finite set of test functions $h$ gives a $z$-test of the null hypothesis ``$T$ is conditionally unbiased'': AEM with an exact anchor must pass it for every $K$ (\cref{thm:unbiased}), and iDEM must fail it wherever $b_K\neq\nabla\log p_t$. By (ii), the held-out denoising loss of two trained networks differs by exactly the difference of their score errors, so models trained on the same exact buffer can be ranked by score error without knowing the score.
+
 \subsection{Replay proposals: letting the energy correct the buffer}
 \label{sec:replay}
 \Cref{thm:unbiased,thm:contraction} hold for \emph{any} proposal $q$ that is independent of the anchor and has a density we can evaluate. The Gaussian proposal $\mathcal{N}(x_t,\sigma_t^2I)$ ignores the prior factor $\tilde\pi$ of the posterior. At high noise this makes $M_t$ huge, so contraction is weak and the anchor dominates.
