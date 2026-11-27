@@ -71,7 +71,11 @@ def _pattern_codes(signs):
 
 
 def compute_all(target, samples, ref):
-    """Metrics for `samples` against exact reference samples `ref`. Keys depend on the target."""
+    """Metrics for `samples` against exact reference samples `ref`. Keys depend on the target.
+
+    Note: w2 is computed on raw coordinates. For molecular targets it is not invariant to rotations or particle
+    permutations; it is kept unchanged for comparability with the other targets. dist_w1 is the invariant check.
+    """
     xs = torch.as_tensor(_np(samples))
     xr = torch.as_tensor(_np(ref))
     with torch.no_grad():
@@ -95,4 +99,9 @@ def compute_all(target, samples, ref):
         ps = np.bincount(cs, minlength=16) / len(cs)
         pr = np.bincount(cr, minlength=16) / len(cr)
         out['pattern_tv'] = 0.5 * float(np.abs(ps - pr).sum())
+    if hasattr(target, 'interatomic_distances'):  # molecular: 1D W1 between pooled pairwise-distance samples
+        with torch.no_grad():
+            ds = target.interatomic_distances(xs).cpu().numpy()
+            dr = target.interatomic_distances(xr).cpu().numpy()
+        out['dist_w1'] = float(wasserstein_distance(ds.ravel(), dr.ravel()))
     return out

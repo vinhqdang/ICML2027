@@ -18,7 +18,7 @@ from .estimators import score_estimate
 from .replay import score_estimate_replay
 from .refine import refine_buffer
 from .metrics import compute_all
-from .model import ScoreNet
+from .model import EGNNScore, ScoreNet
 from .sampler import sample_model
 from .targets import DEFAULTS, get_target
 
@@ -63,6 +63,7 @@ class TrainConfig:
     hidden: int = 256
     n_layers: int = 4
     time_emb: int = 64
+    arch: str = 'mlp'  # 'mlp': ScoreNet on the flat vector; 'egnn': EGNNScore (molecular targets)
     out_dir: str = 'results/train'
 
 
@@ -74,9 +75,9 @@ def _json_safe(d):
     return {k: (float(v) if isinstance(v, (np.floating, float)) else v) for k, v in d.items()}
 
 
-def _sde(net, n, dim, smin, smax, steps, gen, batch_size=10000, score_clip=None):
+def _sde(net, n, dim, smin, smax, steps, gen, batch_size=10000, score_clip=None, project=None):
     x = sample_model(net, n, dim, smin, smax, n_steps=steps, generator=gen, batch_size=batch_size,
-                     score_clip=score_clip)
+                     score_clip=score_clip, project=project)
     return x[torch.isfinite(x).all(dim=1)]
 
 
@@ -90,6 +91,8 @@ def train(cfg=None, **overrides):
         cfg = dataclasses.replace(cfg, **overrides)
     if cfg.method not in ('idem', 'aem'):
         raise ValueError(f'method must be idem or aem, got {cfg.method!r}')
+    if cfg.arch not in ('mlp', 'egnn'):
+        raise ValueError(f'arch must be mlp or egnn, got {cfg.arch!r}')
     anchored = cfg.method == 'aem'
 
     d_smin, d_smax, d_clip = DEFAULTS[cfg.target]
@@ -106,7 +109,14 @@ def train(cfg=None, **overrides):
     d = target.dim
     oc = 10.0 * math.sqrt(d) if cfg.out_clip is None else (cfg.out_clip or None)
 
-    net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb, sigma_min=smin, sigma_max=smax)
+    project = target.project  # identity for free targets; zero-centre-of-mass for molecular targets
+    if cfg.arch == 'egnn':
+        if not hasattr(target, 'n_particles'):
+            raise ValueError(f'arch egnn needs a molecular target, got {cfg.target!r}')
+        net = EGNNScore(target.n_particles, target.spatial_dim, cfg.hidden, cfg.n_layers, cfg.time_emb,
+                        sigma_min=smin, sigma_max=smax)
+    else:
+        net = ScoreNet(d, cfg.hidden, cfg.n_layers, cfg.time_emb, sigma_min=smin, sigma_max=smax)
     opt = torch.optim.Adam(net.parameters(), lr=cfg.lr)
     ref = target.sample(cfg.n_eval, seed=REF_SEED).cpu().numpy()
 
@@ -119,7 +129,7 @@ def train(cfg=None, **overrides):
     if cfg.oracle:
         buf = target.sample(cfg.buffer_size, seed=cfg.seed + 777).to(torch.float32)
     else:
-        buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)  # buffer from the untrained network
+        buf = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc, project=project)  # buffer from the untrained network
     last_samples = None
     summary = {}
     log_path = os.path.join(cfg.out_dir, 'log.jsonl')
@@ -136,7 +146,7 @@ def train(cfg=None, **overrides):
                 x0 = buf[idx]
                 t = torch.rand(B, generator=gen, dtype=x0.dtype)
                 sig = smin * torch.exp(t * log_ratio)
-                eps = torch.randn(B, d, generator=gen, dtype=x0.dtype)
+                eps = project(torch.randn(B, d, generator=gen, dtype=x0.dtype))
                 x_t = x0 + sig[:, None] * eps
                 p_anchor = 0.0
                 if anchored:
@@ -179,7 +189,7 @@ def train(cfg=None, **overrides):
                 n_evals += B * (cfg.K + p_anchor) * (cfg.n_isir if p_anchor > 0 else 1)
 
             if not cfg.oracle:
-                new = _sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc)
+                new = project(_sde(net, cfg.n_new, d, smin, smax, cfg.sde_steps, gen, score_clip=oc, project=project))
                 buf = torch.cat([buf, new])[-cfg.buffer_size:]
             r_start = cfg.refine_start if cfg.refine_start >= 0 else cfg.anchor_warmup + 1
             if cfg.refine > 0 and it >= r_start:
@@ -192,7 +202,8 @@ def train(cfg=None, **overrides):
                 net.eval()
                 eval_gen = torch.Generator(device=torch.get_default_device())
                 eval_gen.manual_seed(cfg.seed + 1)
-                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen, score_clip=oc).cpu().numpy()
+                last_samples = _sde(net, cfg.n_eval, d, smin, smax, cfg.sde_steps_eval, eval_gen, score_clip=oc,
+                                    project=project).cpu().numpy()
                 metrics = compute_all(target, last_samples, ref)
                 rec = {'iter': it, 'wall_time': time.time() - t0, 'n_energy_evals': n_evals,
                        'loss': float(np.mean(losses)), 'buffer_size': int(buf.shape[0]), **metrics}
