@@ -1,18 +1,66 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We ask three questions.
-(Q1)~Does anchoring reduce the bias and MSE of the score target as the theory predicts, including with an imperfect buffer?
-(Q2)~Does a less biased target give better samplers in full iDEM-style training?
-(Q3)~Where does anchoring fail, and does the failure match \cref{thm:contraction}?
+We ask four questions.
+(Q1)~Is the iDEM target inconsistent in practice, including on molecular systems, and does anchoring remove the bias?
+(Q2)~Does the inconsistency survive training, i.e.\ does iDEM trained on \emph{exact} samples learn a wrong score?
+(Q3)~Does a consistent target give better samplers in full iDEM-style training?
+(Q4)~Where does anchoring fail, and does the failure match \cref{thm:contraction}?
 All methods share one codebase, network, noise schedule, test function, proposal count ($K=100$) and training budget (\cref{app:exp}). The only differences are the regression target and, for the explore$\to$anchor variants, the iteration at which the anchor is switched on.
 
 % -------------------------------------------------------------
-\subsection{Estimator study (Q1)}
+\subsection{Is the training target consistent? (Q1)}
 \label{sec:exp-estimator}
 For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evaluate $\nabla\log p_t$ in closed form, so bias and variance can be measured directly.
 \Cref{fig:estimator} reports the relative MSE and relative squared bias of each estimator over 12 noise levels, averaged over 256 points and 32 independent repeats. In each repeat the proposals and the anchor are redrawn.
 \input{sec_exp_estimator_text}
+\input{sec_exp_diag_text}
+
+\begin{table*}[t]
+\centering
+\caption{\textbf{Consistency diagnostics on molecular targets.} $|z|$: larger of the two $z$-scores of the test of \cref{prop:diag}(i) ($N=20\,000$ reference pairs per $\sigma_t$; bold: $|z|>3$). An unbiased target must give $|z|$ of order one. $\Delta\tilde L$: held-out normalized denoising loss of the oracle-trained iDEM model minus that of the AEM model (mean $\pm$ std over 3 seeds; in parentheses, the number of seeds with $\Delta\tilde L>0$). By \cref{prop:diag}(ii), $\Delta\tilde L>0$ means that AEM learned the more accurate score.}
+\label{tab:diag}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{rccc c rcc c}
+\toprule
+\multicolumn{5}{c}{DW-4 ($d_{\mathrm{eff}}=6$)} & \multicolumn{4}{c}{LJ-13 ($d_{\mathrm{eff}}=36$)}\\
+\cmidrule(lr){1-5}\cmidrule(lr){6-9}
+& \multicolumn{3}{c}{$|z|$ of training target} & & & \multicolumn{2}{c}{$|z|$} & \\
+$\sigma_t$ & iDEM & iDEM$_{K=1000}$ & AEM & $\Delta\tilde L$ (oracle) & $\sigma_t$ & iDEM & AEM & $\Delta\tilde L$ (oracle)\\
+\midrule
+\input{tab_diag}
+\bottomrule
+\end{tabular}
+\end{table*}
+
+% -------------------------------------------------------------
+\subsection{Does the bias survive training? Oracle buffer (Q2)}
+\label{sec:exp-oracle}
+To rule out explanations such as short training, the stability caps or the sampler loop, we remove the loop entirely. We train on a \emph{fixed buffer of $10^4$ exact samples} from $\pi$ (\texttt{oracle} mode; rows drawn without replacement; 3 seeds), so the buffer law is exactly $\pi$ and \cref{cor:fixed} applies verbatim. For MW-32 and GMM-10 we measure the relative error of the learned score against the exact noised score (\cref{tab:oracle}); for DW-4 and LJ-13 (reference samples from MALA) we use the held-out denoising loss (\cref{tab:diag}).
+\input{sec_exp_oracle_text}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Oracle buffer} (fixed exact samples, no sampler loop; $K=100$; mean $\pm$ std over 3 seeds, except $K{=}1000$: one seed). Relative error $\mathbb{E}\|s_\theta-\nabla\log p_t\|^2/\mathbb{E}\|\nabla\log p_t\|^2$ of the learned score.}
+\label{tab:oracle}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{llccccc}
+\toprule
+& & \multicolumn{5}{c}{$\sigma_t$}\\
+target & method & 0.03 & 0.1 & 0.3 & 1 & 2\\
+\midrule
+MW-32 & iDEM & $1.29{\pm}.04$ & $0.93{\pm}.01$ & $1.02{\pm}.09$ & $25.0{\pm}2.6$ & $35.0{\pm}2.3$\\
+ & iDEM$_{K=1000}$ & 1.28 & 0.93 & 0.91 & 9.79 & 27.6\\
+ & AEM & $\mathbf{0.77{\pm}.03}$ & $\mathbf{0.51{\pm}.02}$ & $\mathbf{0.35{\pm}.01}$ & $\mathbf{0.140{\pm}.003}$ & $\mathbf{0.074{\pm}.004}$\\
+GMM-10 & iDEM & $0.21{\pm}.06$ & $0.043{\pm}.011$ & $0.013{\pm}.001$ & $0.010{\pm}.001$ & $0.0074{\pm}.0001$\\
+ & iDEM$_{K=1000}$ & 0.12 & 0.040 & 0.014 & 0.012 & 0.008\\
+ & AEM & $0.16{\pm}.03$ & $0.034{\pm}.005$ & $0.012{\pm}.003$ & $0.010{\pm}.003$ & $0.0063{\pm}.0010$\\
+\bottomrule
+\end{tabular}}
+\end{table}
 
 \begin{figure*}[t]
 \centering
@@ -22,7 +70,7 @@ For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evalua
 \end{figure*}
 
 % -------------------------------------------------------------
-\subsection{Training samplers (Q2)}
+\subsection{Training samplers (Q3)}
 \label{sec:exp-training}
 \input{sec_exp_training_text}
 
@@ -44,6 +92,6 @@ For GMM-40 we can sample the posterior $\pi_t(\cdot\mid x_t)$ exactly and evalua
 \end{table}
 
 % -------------------------------------------------------------
-\subsection{Where anchoring fails (Q3)}
+\subsection{Where anchoring fails (Q4)}
 \label{sec:exp-ablation}
 \input{sec_exp_failure_text}

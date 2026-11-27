@@ -83,12 +83,11 @@ In practice the buffer is only approximately $\pi$. The next result shows that A
 \label{thm:contraction}
 Let $y_0\sim\mu$ for an arbitrary distribution $\mu$ (e.g.\ $\mu=\rho_t(\cdot\mid x_t)$, the buffer posterior), with the other particles as before.
 Then $\mathbb{E}[\widehat A_K]=(\mu P_K)(g)$, where $P_K$ is the i-SIR Markov kernel, which leaves $\pi_t$ invariant. For bounded $g$,
-\[
+\begin{gather*}
 \big\|\mathbb{E}[\widehat A_K]-\bar g_t(x_t)\big\|
-\le 2\|g\|_\infty\,(1-\epsilon_K)\,\mathrm{TV}(\mu,\pi_t),
-\qquad
+\le 2\|g\|_\infty\,(1-\epsilon_K)\,\mathrm{TV}(\mu,\pi_t),\\
 \epsilon_K=\frac{K}{K-1+2M_t}.
-\]
+\end{gather*}
 Running $n$ i-SIR steps before the final Rao--Blackwellized average (each step resamples a new anchor and redraws the proposals) replaces $(1-\epsilon_K)$ by $(1-\epsilon_K)^n$.
 \end{theorem}
 \begin{proof}[Proof sketch]
@@ -118,42 +117,12 @@ $D_h=\mathbb{E}\big[(T-u)\cdot h(x_t)\big]=0$ for every bounded test function $h
 Part~(i) follows from $\mathbb{E}[T-u\mid x_t]=\mathbb{E}[T\mid x_t]-\nabla\log p_t(x_t)$, and part~(ii) is the classical identity behind denoising score matching~\citep{vincent2011connection}.
 By (i), a finite set of test functions $h$ gives a $z$-test of the null hypothesis ``$T$ is conditionally unbiased'': AEM with an exact anchor must pass it for every $K$ (\cref{thm:unbiased}), and iDEM must fail it wherever $b_K\neq\nabla\log p_t$. By (ii), the held-out denoising loss of two trained networks differs by exactly the difference of their score errors, so models trained on the same exact buffer can be ranked by score error without knowing the score.
 
-\subsection{Replay proposals: letting the energy correct the buffer}
-\label{sec:replay}
-\Cref{thm:unbiased,thm:contraction} hold for \emph{any} proposal $q$ that is independent of the anchor and has a density we can evaluate. The Gaussian proposal $\mathcal{N}(x_t,\sigma_t^2I)$ ignores the prior factor $\tilde\pi$ of the posterior. At high noise this makes $M_t$ huge, so contraction is weak and the anchor dominates.
-A replay buffer gives us something better. For row $i$ of a minibatch with anchors $x_0^{(1:B)}$, define the leave-one-out mixture
-\begin{equation}
-q_i(y)=\alpha\,\mathcal{N}(y;x_t^{(i)},\sigma_t^2I)+(1-\alpha)\!\sum_{j\neq i}r_{ij}\,\mathcal{N}(y;x_0^{(j)},\tau_t^2I),
-\label{eq:replay}
-\end{equation}
-with responsibilities $r_{ij}\propto\mathcal{N}(x_t^{(i)};x_0^{(j)},(\sigma_t^2+\tau_t^2)I)$ and bandwidth $\tau_t=\min(\sigma_t,\tau_{\max})$.
-Because $q_i$ excludes row $i$, it is independent of the anchor $x_0^{(i)}$, as long as minibatch rows are distinct buffer points, and its density is available in closed form.\footnote{The training runs in \cref{sec:experiments} drew minibatch rows with replacement. The same buffer point can then appear in another row (probability $\approx2.5\%$ per row for $B=256$ and a buffer of $10^4$), which slightly violates independence. Our code provides sampling without replacement, which we use for the oracle experiment in \cref{sec:exp-ablation}.}
-The weights $w(y)=\tilde\pi(y)\mathcal{N}(x_t;y,\sigma_t^2I)/q_i(y)$ are therefore exact, and both theorems apply unchanged.
-The mixture has three effects.
-(i)~Proposals now land in the modes the buffer has already found, so $M_t$, and with it the bias constant $1-\epsilon_K$, shrinks sharply.
-(ii)~The importance weights compare energies \emph{across} modes. If the buffer over-represents a mode, $q_i$ is large there and $w$ is small, so the target corrects the mode weights; an anchor alone cannot do this.
-(iii)~The Gaussian component ($\alpha>0$) keeps iDEM's exploration of modes the buffer has not found.
-The cost is one $B\times B$ distance matrix and a $B\times K\times B$ log-sum-exp per step, which is negligible next to the energy evaluations.
+\subsection{Extensions}
+\label{sec:ext}
+\Cref{thm:unbiased,thm:contraction} hold for any anchor-independent proposal with a computable density. \Cref{app:ext} uses this to define \emph{replay proposals} (a leave-one-out kernel mixture over the other buffer samples of a minibatch, whose importance weights compare energies across the modes the buffer has found) and an exact \emph{buffer refinement} step (a noise-then-i-SIR Gibbs sweep that leaves an exact buffer invariant, \cref{prop:refine}). Neither is needed for the consistency results, and refinement did not change mode weights in our runs (\cref{app:ext}).
 
 \paragraph{Test function and practical deviations.}
 We combine the TSI and DSI test functions with the fixed weights $\alpha_t=(1+\sigma_t^2)^{-1}$ for every method; any such combination keeps the target unbiased (\cref{app:extra}). The implementation also clips gradients and caps $\|\sigma_t\,\mathrm{target}\|$ identically for all methods, which introduces a small bias, and the finite buffer is only approximately $\pi$ (\cref{app:extra}).
-
-\subsection{Refining the buffer: an exact i-SIR Gibbs step}
-\label{sec:refine}
-Anchoring leaves the buffer untouched, so it cannot repair buffer errors that the proposals do not see. We add an optional \emph{refinement} step that moves the buffer towards $\pi$ using only energy evaluations, and that leaves an exact buffer exact.
-Treat the buffer as $N$ chains $x^{1:N}$ and a block $S$ of them as the state to be updated, with the remaining chains $R$ held fixed as reference.
-For $x=x^i$, $i\in S$, draw a noise level $\sigma$ and apply two steps:
-(1)~\emph{noise}: $x_t=x+\sigma\varepsilon$, an exact draw from $\mathcal{N}(x_t\mid x,\sigma^2I)$;
-(2)~\emph{i-SIR resample}: draw $K$ proposals $y_k\sim q(\cdot\mid x_t,R)$, where $q$ is the mixture \eqref{eq:replay} built from the reference chains, and select $x'$ among $\{x,y_1,\dots,y_K\}$ with probability proportional to $\tilde\pi(y)\,\mathcal{N}(x_t;y,\sigma^2I)/q(y\mid x_t,R)$.
-Step~(2) is the conditional importance sampling kernel of \cref{sec:method} applied to the posterior $\pi_t(\cdot\mid x_t)$, with the current chain playing the role of the anchor. We call the pair a refinement sweep.
-
-\begin{proposition}[Invariance of refinement]
-\label{prop:refine}
-Let $\mathcal{P}_R$ be the kernel that updates every chain in $S$ independently by steps (1)--(2), given reference chains $R$. If $x^{S}\sim\pi^{\otimes|S|}$ then $\mathcal{P}_R$ maps $x^S$ to a sample of $\pi^{\otimes|S|}$, for every fixed $R$ and every $K\ge1$. Consequently, a sweep that visits all blocks in turn, each with a reference set made of chains from outside the block, leaves $\pi^{\otimes N}$ invariant.
-\end{proposition}
-
-\noindent The proof is in \cref{app:proofs} (it is the standard Gibbs-plus-i-SIR argument on the joint density $\pi(x)\mathcal{N}(x_t\mid x,\sigma^2I)$). Two features matter. The proposal depends on $R$ and $x_t$ but not on $x$, which is what makes step~(2) a valid i-SIR kernel. And the invariance is for the \emph{exact} buffer: a buffer that is not exact is not repaired in one step, and we prove no rate for it. Unlike anchoring, however, the step can change the relative weights of the modes the buffer contains, because the weights $\tilde\pi/q$ compare energies across modes.
-Refinement requires $K{+}1$ energy evaluations per buffer point and sweep, with no gradients. It is run once after each outer iteration, once anchoring has started (explore$\to$anchor), with noise levels log-uniform in $[\sigma_{\min},\sigma_{\mathrm{ref}}]$. Since $\sigma_{\mathrm{ref}}$ sets how far a refinement step can move a point, we take it at the within-mode scale of the target (\cref{app:exp}). The proposals are the replay mixture with $\alpha=0.5$.
 
 \begin{algorithm}[t]
 \caption{Anchored Energy Matching (AEM)}

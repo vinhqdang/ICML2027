@@ -1,0 +1,42 @@
+\section{Extensions: replay proposals and buffer refinement}
+\label{app:ext}
+\subsection{Replay proposals: letting the energy correct the buffer}
+\label{sec:replay}
+\Cref{thm:unbiased,thm:contraction} hold for \emph{any} proposal $q$ that is independent of the anchor and has a density we can evaluate. The Gaussian proposal $\mathcal{N}(x_t,\sigma_t^2I)$ ignores the prior factor $\tilde\pi$ of the posterior. At high noise this makes $M_t$ huge, so contraction is weak and the anchor dominates.
+A replay buffer gives us something better. For row $i$ of a minibatch with anchors $x_0^{(1:B)}$, define the leave-one-out mixture
+\begin{equation}
+q_i(y)=\alpha\,\mathcal{N}(y;x_t^{(i)},\sigma_t^2I)+(1-\alpha)\!\sum_{j\neq i}r_{ij}\,\mathcal{N}(y;x_0^{(j)},\tau_t^2I),
+\label{eq:replay}
+\end{equation}
+with responsibilities $r_{ij}\propto\mathcal{N}(x_t^{(i)};x_0^{(j)},(\sigma_t^2+\tau_t^2)I)$ and bandwidth $\tau_t=\min(\sigma_t,\tau_{\max})$.
+Because $q_i$ excludes row $i$, it is independent of the anchor $x_0^{(i)}$, as long as minibatch rows are distinct buffer points, and its density is available in closed form.\footnote{The training runs in \cref{sec:experiments} drew minibatch rows with replacement. The same buffer point can then appear in another row (probability $\approx2.5\%$ per row for $B=256$ and a buffer of $10^4$), which slightly violates independence. Our code provides sampling without replacement, which we use for the oracle experiments of \cref{sec:exp-oracle}.}
+The weights $w(y)=\tilde\pi(y)\mathcal{N}(x_t;y,\sigma_t^2I)/q_i(y)$ are therefore exact, and both theorems apply unchanged.
+The mixture has three effects.
+(i)~Proposals now land in the modes the buffer has already found, so $M_t$, and with it the bias constant $1-\epsilon_K$, shrinks sharply.
+(ii)~The importance weights compare energies \emph{across} modes. If the buffer over-represents a mode, $q_i$ is large there and $w$ is small, so the target corrects the mode weights; an anchor alone cannot do this.
+(iii)~The Gaussian component ($\alpha>0$) keeps iDEM's exploration of modes the buffer has not found.
+The cost is one $B\times B$ distance matrix and a $B\times K\times B$ log-sum-exp per step, which is negligible next to the energy evaluations.
+
+\subsection{Refining the buffer: an exact i-SIR Gibbs step}
+\label{sec:refine}
+Anchoring leaves the buffer untouched, so it cannot repair buffer errors that the proposals do not see. We add an optional \emph{refinement} step that moves the buffer towards $\pi$ using only energy evaluations, and that leaves an exact buffer exact.
+Treat the buffer as $N$ chains $x^{1:N}$ and a block $S$ of them as the state to be updated, with the remaining chains $R$ held fixed as reference.
+For $x=x^i$, $i\in S$, draw a noise level $\sigma$ and apply two steps:
+(1)~\emph{noise}: $x_t=x+\sigma\varepsilon$, an exact draw from $\mathcal{N}(x_t\mid x,\sigma^2I)$;
+(2)~\emph{i-SIR resample}: draw $K$ proposals $y_k\sim q(\cdot\mid x_t,R)$, where $q$ is the mixture \eqref{eq:replay} built from the reference chains, and select $x'$ among $\{x,y_1,\dots,y_K\}$ with probability proportional to $\tilde\pi(y)\,\mathcal{N}(x_t;y,\sigma^2I)/q(y\mid x_t,R)$.
+Step~(2) is the conditional importance sampling kernel of \cref{sec:method} applied to the posterior $\pi_t(\cdot\mid x_t)$, with the current chain playing the role of the anchor. We call the pair a refinement sweep.
+
+\begin{proposition}[Invariance of refinement]
+\label{prop:refine}
+Let $\mathcal{P}_R$ be the kernel that updates every chain in $S$ independently by steps (1)--(2), given reference chains $R$. If $x^{S}\sim\pi^{\otimes|S|}$ then $\mathcal{P}_R$ maps $x^S$ to a sample of $\pi^{\otimes|S|}$, for every fixed $R$ and every $K\ge1$. Consequently, a sweep that visits all blocks in turn, each with a reference set made of chains from outside the block, leaves $\pi^{\otimes N}$ invariant.
+\end{proposition}
+
+\noindent The proof is in \cref{app:proofs} (it is the standard Gibbs-plus-i-SIR argument on the joint density $\pi(x)\mathcal{N}(x_t\mid x,\sigma^2I)$). Two features matter. The proposal depends on $R$ and $x_t$ but not on $x$, which is what makes step~(2) a valid i-SIR kernel. And the invariance is for the \emph{exact} buffer: a buffer that is not exact is not repaired in one step, and we prove no rate for it. Unlike anchoring, however, the step can change the relative weights of the modes the buffer contains, because the weights $\tilde\pi/q$ compare energies across modes.
+Refinement requires $K{+}1$ energy evaluations per buffer point and sweep, with no gradients. It is run once after each outer iteration, once anchoring has started (explore$\to$anchor), with noise levels log-uniform in $[\sigma_{\min},\sigma_{\mathrm{ref}}]$. Since $\sigma_{\mathrm{ref}}$ sets how far a refinement step can move a point, we take it at the within-mode scale of the target (\cref{app:exp}). The proposals are the replay mixture with $\alpha=0.5$.
+
+
+\subsection{Results of buffer refinement}
+
+Refinement is exact for an exact buffer and is meant to correct the weights of the modes a buffer already contains. In our runs it did not do so on these targets. On GMM-10 the refined and unrefined explore$\to$anchor runs are indistinguishable (mode TV \ms{gmm16}{aem_ea_refine}{mode_tv} vs.\ \ms{gmm16}{aem_ea}{mode_tv}; $\mathcal{W}_2$ \ms{gmm16}{aem_ea_refine}{w2} vs.\ \ms{gmm16}{aem_ea}{w2}). On MW-32 it lowers the mean $\mathcal{E}$-$\mathcal{W}_1$ from \ms{mw32}{aem_ea}{energy_w1} to \ms{mw32}{aem_ea_refine}{energy_w1} but leaves the mode weights unchanged. A plausible reason, which we did not verify on the buffer, is that the explore phase has already put nearly all mass in the major well (iDEM itself has fraction $\val{mw32}{idem}{major_well}{m}$ there), and a Gibbs step whose proposals come from the buffer itself and from local Gaussian noise cannot reach the minor wells at the noise levels we use ($\sigma\le1$). On the molecular targets refinement is neutral or slightly worse (\cref{tab:mol}). A single-seed pilot had suggested that refinement helps GMM-10 mode weights; the three-seed, longer runs do not confirm this. We report it as a correct but, here, ineffective addition.
+Refinement uses $\ratio{evals_over_idem:gmm16:aem_ea_refine}\times$ the energy evaluations of iDEM (explore$\to$anchor without it: $\ratio{evals_over_idem:gmm16:aem_ea}\times$).
+
