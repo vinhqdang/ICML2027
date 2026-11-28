@@ -38,18 +38,19 @@ def _clip_rows(v, c):
     return v * torch.clamp(c / nrm.clamp_min(1e-300), max=1.0)
 
 
-def run_target(name, sigmas, N, out_path, seed_x0=12345, seed_eps=2024, seed_est=7, rep=0):
+def run_target(name, sigmas, N, out_path, seed_x0=12345, seed_eps=2024, seed_est=7, rep=0, kinds=('mix',)):
     seed_x0, seed_eps, seed_est = seed_x0 + 1000 * rep, seed_eps + 1000 * rep, seed_est + 1000 * rep
     target = get_target('gmm_d', dim=16) if name == 'gmm16' else get_target(name)
     tname = name
     clip = 1000.0 if name == 'lj13' else None  # training clip for LJ-13, none for DW-4 and gmm16
     x0 = target.sample(N, seed=seed_x0).to(torch.float64)
     ests = [('idem', None, 100), ('aem', 'x0', 100)]
-    if name == 'dw4' and rep == 0:
+    if name == 'dw4' and rep == 0 and tuple(kinds) == ('mix',):
         ests.append(('idem', None, 1000))
     has_exact = hasattr(target, 'noised_score')
-    if has_exact:
+    if has_exact and tuple(kinds) == ('mix',):
         ests.append(('exact', 'exact', 0))
+    ests = [(e, a, K, kd) for (e, a, K) in ests for kd in (kinds if a != 'exact' else ('mix',))]
     rows = []
     for sig_v in sigmas:
         t0 = time.time()
@@ -59,13 +60,13 @@ def run_target(name, sigmas, N, out_path, seed_x0=12345, seed_eps=2024, seed_est
         x_t = x0 + sig[:, None] * eps
         r = (x0 - x_t) / sig[:, None] ** 2
         hs = {'pos': target.project(x_t), 'grad': _clip_rows(target.project(_grad_neg_energy(target, x_t)), CLIP_H)}
-        for est_name, anc_flag, K in ests:
+        for est_name0, anc_flag, K, kind in ests:
+            est_name = est_name0 if tuple(kinds) == ('mix',) else f'{est_name0}_{kind}'
             if anc_flag == 'exact':
                 T = target.noised_score(x_t, sig).to(torch.float64)
             else:
                 gen = torch.Generator().manual_seed(seed_est + K + (1 if anc_flag else 0))
                 anchor = x0 if anc_flag == 'x0' else None
-                kind = 'mix'
                 T = score_estimate(x_t, sig, target, K, anchor=anchor, kind=kind, clip=clip, generator=gen)
                 T = T.to(torch.float64)
             D = T - r
@@ -97,8 +98,9 @@ if __name__ == '__main__':
     p.add_argument('--target', required=True, choices=['gmm16', 'dw4', 'lj13'])
     p.add_argument('--sigmas', type=float, nargs='+', required=True)
     p.add_argument('--N', type=int, default=20000)
+    p.add_argument('--kinds', nargs='+', default=['mix'], help='test functions of the SNIS targets: tsi dsi mix cv')
     p.add_argument('--rep', type=int, default=0, help='replicate index; shifts all seeds (x0, noise, estimator)')
     p.add_argument('--out', default=os.path.join(ROOT, 'results', 'dsi_bias', 'dsi_bias.csv'))
     a = p.parse_args()
     torch.set_default_dtype(torch.float32)
-    run_target(a.target, a.sigmas, a.N, a.out, rep=a.rep)
+    run_target(a.target, a.sigmas, a.N, a.out, rep=a.rep, kinds=a.kinds)

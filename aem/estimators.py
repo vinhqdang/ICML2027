@@ -34,7 +34,7 @@ def _estimate_block(target, x_t, sig, anchor, K, kind, n_isir, clip, generator, 
         props = x_t[:, None, :] + sig[:, :, None] * eps
         parts = props if cur_anchor is None else torch.cat([cur_anchor[:, None, :], props], dim=1)
 
-        E, neg_grad = _energy(target, parts, need_grad=last and kind in ('tsi', 'mix', 'avg'))
+        E, neg_grad = _energy(target, parts, need_grad=last and kind in ('tsi', 'mix', 'avg', 'cv'))
         logw = torch.where(torch.isfinite(-E), -E, torch.full_like(E, -float('inf')))
         w = torch.nan_to_num(torch.softmax(logw, dim=1), nan=0.0)
         dead = w.sum(1) <= 0
@@ -47,18 +47,31 @@ def _estimate_block(target, x_t, sig, anchor, K, kind, n_isir, clip, generator, 
             continue
 
         est_tsi = est_dsi = None
-        if kind in ('tsi', 'mix', 'avg'):
+        if kind in ('tsi', 'mix', 'avg', 'cv'):
             g = neg_grad
             if clip is not None:
                 nrm = g.norm(dim=-1, keepdim=True)
                 g = g * torch.clamp(clip / nrm.clamp_min(1e-30), max=1.0)
             est_tsi = (w[..., None] * g).sum(1)
-        if kind in ('dsi', 'mix', 'avg'):
+        if kind in ('dsi', 'mix', 'avg', 'cv'):
             est_dsi = (w[..., None] * (parts - x_t[:, None, :])).sum(1) / sig**2
         if kind == 'tsi':
             est = est_tsi
         elif kind == 'dsi':
             est = est_dsi
+        elif kind == 'cv':
+            # Control-variate combination with a per-point coefficient estimated from the same weighted particles:
+            # est = mean_w(a) - beta * mean_w(a - b), a = TSI, b = DSI per particle, beta = Cov_w(a, a-b) / Var_w(a-b)
+            # (pooled over coordinates). The data-dependent beta is in the spirit of CVSI.
+            a = g
+            b = (parts - x_t[:, None, :]) / sig[:, :, None] ** 2
+            dlt = a - b
+            md = (w[..., None] * dlt).sum(1)
+            ma = est_tsi
+            cov = (w[..., None] * (a - ma[:, None]) * (dlt - md[:, None])).sum((1, 2))
+            var = (w[..., None] * (dlt - md[:, None]) ** 2).sum((1, 2))
+            beta = torch.where(var > 0, cov / var.clamp_min(1e-300), torch.zeros_like(var))
+            est = ma - beta[:, None] * md
         elif kind == 'avg':
             est = 0.5 * (est_tsi + est_dsi)
         else:  # 'mix': precision-motivated schedule, TSI at low noise and DSI at high noise
@@ -92,7 +105,7 @@ def score_estimate(x_t, sigma, target, K, anchor=None, kind='tsi', n_isir=1, cli
     Returns:
         est [B, d] (detached), and the diagnostics dict if return_diag.
     """
-    if kind not in ('tsi', 'dsi', 'mix', 'avg'):
+    if kind not in ('tsi', 'dsi', 'mix', 'avg', 'cv'):
         raise ValueError(f'unknown kind {kind!r}')
     if K < 0 or (K == 0 and anchor is None):
         raise ValueError('K = 0 requires an anchor')
