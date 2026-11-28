@@ -79,6 +79,26 @@ $d$ & $\sigma_t$ & iDEM & AEM & anchor wt.\\
 \label{fig:marginals}
 \end{figure}
 
+\paragraph{Other self-normalized targets.}
+\Cref{tab:kinds} applies the consistency test to three self-normalized targets and their anchored versions, with the same draws as \cref{tab:diag} ($N=20\,000$; GMM-10 as a control with known score). TSI is the original iDEM target; DSI is the self-normalized posterior-mean estimate $\mathbb{E}[x_0\mid x_t]$, the form of the iEFM target in the VE parametrization; CV combines TSI and DSI with a per-point control-variate coefficient $\beta=\mathrm{Cov}_w(a,a-b)/\mathrm{Var}_w(a-b)$ estimated from the same weighted particles, in the spirit of CVSI~\citep{cvsi2025} (our implementation, not the authors'). All three unanchored targets are rejected at moderate and high noise. Anchoring fixes TSI and DSI, whose test functions are fixed. The anchored CV target is still rejected at some noise levels ($|z|$ up to $34$ on LJ-13): its coefficient depends on the particles, including the anchor, so \cref{thm:unbiased} does not apply. This is the bias we avoid by using the fixed schedule $\alpha_t$, and it shows that the test does have power against an anchored target when that target is biased.
+
+\begin{table}[h]
+\centering
+\caption{Largest $|z|$ of the consistency test over the two test functions, for unanchored (iDEM-style) and anchored (AEM) versions of three self-normalized targets ($K=100$; bold: $|z|>3$; --: $T\equiv u$ exactly, so $z$ is undefined).}
+\label{tab:kinds}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrcccccc}
+\toprule
+& & \multicolumn{3}{c}{unanchored} & \multicolumn{3}{c}{anchored}\\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+target & $\sigma_t$ & TSI & DSI & CV & TSI & DSI & CV\\
+\midrule
+\input{tab_kinds}
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Combining TSI and DSI.}
 Since every $g$ gives an unbiased target under the same particles and weights, any combination $\alpha_t g_{\mathrm{TSI}}+(1-\alpha_t)g_{\mathrm{DSI}}$ is also unbiased (\cref{thm:unbiased}).
 We use the fixed schedule $\alpha_t=(1+\sigma_t^2)^{-1}$, which trusts TSI at low noise and DSI at high noise. For a target whose components are unit-covariance Gaussians, it makes the per-particle test function constant within a component, so the estimator has zero within-component variance. For other targets it is only a heuristic; a target-adapted choice would use the local curvature. Unlike the control-variate coefficient of \citet{cvsi2025}, it requires no per-batch estimation, which would reintroduce bias. Because this schedule favours unit-variance components, we give it to every method, iDEM included, and we check robustness to non-unit components in \cref{app:extra}.

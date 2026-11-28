@@ -47,3 +47,21 @@ for i in range(6):
     out.append(' & '.join(cells[:4] + [f'${sci(a[0], a[1])}$ ({a[2]}/3)'] + cells[4:] + [f'${sci(b[0], b[1])}$ ({b[2]}/3)']) + r'\\')
 open(os.path.join(P, 'tab_diag.tex'), 'w').write('\n'.join(out) + '\n')
 print('\n'.join(out))
+
+# Appendix table: max |z| per estimator type (results/dsi_bias/kinds)
+k = pd.read_csv(os.path.join(R, 'results/dsi_bias/kinds/dsi_bias_kinds.csv'))
+k['az'] = k.zscore.abs()
+mk = k.groupby(['target', 'sigma', 'estimator']).az.max().unstack('estimator')
+order = ['idem_tsi', 'idem_dsi', 'idem_cv', 'aem_tsi', 'aem_dsi', 'aem_cv']
+names = {'dw4': 'DW-4', 'lj13': 'LJ-13', 'gmm16': 'GMM-10'}
+out = []
+for tg in ['dw4', 'lj13', 'gmm16']:
+    sub = mk.loc[tg]
+    for i, (s, row) in enumerate(sub.iterrows()):
+        cells = []
+        for c in order:
+            v = row[c]
+            cells.append('--' if np.isnan(v) else (f'\\textbf{{{v:.1f}}}' if v > 3 else f'{v:.1f}'))
+        out.append(f"{names[tg] if i == 0 else ''} & {s:g} & " + ' & '.join(cells) + r'\\')
+    out.append(r'\midrule' if tg != 'gmm16' else '')
+open(os.path.join(P, 'tab_kinds.tex'), 'w').write('\n'.join(out) + '\n')
